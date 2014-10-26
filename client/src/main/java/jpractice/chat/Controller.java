@@ -46,7 +46,7 @@ public class Controller implements Initializable {
 
     @FXML
     void textEntered(ActionEvent event) {
-        sender.sendObject(editText.getText());
+        sender.sendObject(me.getName() + ": " + editText.getText() + "\n");
         editText.clear();
     }
 

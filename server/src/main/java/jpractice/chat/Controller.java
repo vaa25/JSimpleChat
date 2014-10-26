@@ -40,7 +40,7 @@ public class Controller implements Initializable, NewPersonListener {
 
     @FXML
     void textEntered(ActionEvent event) {
-        String text = "Server: " + editText.getText();
+        String text = "Server: " + editText.getText() + "\n";
         commonArea.appendText(text);
         sendToAll(text);
         editText.clear();

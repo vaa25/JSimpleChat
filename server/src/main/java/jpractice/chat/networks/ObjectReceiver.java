@@ -18,13 +18,13 @@ public class ObjectReceiver implements Runnable {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObjectInputStream in;
     private ObjectParser parser;
-    private Person source;
+    private Person person;
 
     //    private boolean interrupt;
     public ObjectReceiver(ObjectInputStream in, Person person, ObjectParser parser) {
         this.in = in;
         this.parser = parser;
-        source = person;
+        this.person = person;
     }
 
 
@@ -32,7 +32,7 @@ public class ObjectReceiver implements Runnable {
     public void run() {
         while (true) {
             try {
-                logger.info(Thread.currentThread().getName() + " ObjectReceiver пытается принять произвольный объект");
+                logger.info(Thread.currentThread().getName() + " ObjectReceiver " + person.getName() + " пытается принять произвольный объект");
                 Object object = in.readObject();
                 logger.info(Thread.currentThread().getName() + " ObjectReceiver принял объект " + object);
                 parser.put(object);
@@ -41,9 +41,9 @@ public class ObjectReceiver implements Runnable {
                 logger.error(Thread.currentThread().getName() + " ObjectReceiver (" + Thread.currentThread().getName() + ") EOFException: ObjectInputStream closed first", e);
                 break;
             } catch (SocketException e) {
-                logger.error(Thread.currentThread().getName() + "ObjectReceiver (" + Thread.currentThread().getName() + ") SocketException: ObjectInputStream closed first. " + source.getName());
-                source.setOnline(false);
-                parser.put(source);
+                logger.error(Thread.currentThread().getName() + "ObjectReceiver (" + Thread.currentThread().getName() + ") SocketException: ObjectInputStream closed first. " + person.getName());
+                person.setOnline(false);
+                parser.put(person);
                 break;
             } catch (IOException e) {
                 logger.error(Thread.currentThread().getName() + "ObjectReceiver (" + Thread.currentThread().getName() + ") IOException: ", e);

@@ -49,6 +49,7 @@ public class Network {
                     ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                     System.out.println("3");
                     Person person = (Person) (ois.readObject());
+                    System.out.println(person.getName());
                     map.putIfAbsent(oos, person);
                     new Thread(new ObjectReceiver(ois, person, parser)).start();
                 } catch (ClassNotFoundException e) {
