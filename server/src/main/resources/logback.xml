@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+	<property name="LOG_PATH" value="log/" />
+	<property name="LOG_NAME" value="server.log" />
+
+	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>[%-5level] [%d{HH:mm:ss}] %logger{36}: %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="file" class="ch.qos.logback.core.FileAppender">
+		<file>${LOG_PATH}/${LOG_NAME}</file>
+		<encoder>
+			<pattern>[%-5level] [%d{HH:mm:ss}] %logger{36}: %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<root level="ERROR">
+	</root>
+
+	<logger name="server" level="DEBUG">
+		<appender-ref ref="console" />
+		<appender-ref ref="file" />
+	</logger>
+</configuration>
