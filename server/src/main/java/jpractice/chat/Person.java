@@ -10,12 +10,10 @@ import java.io.Serializable;
  */
 public class Person implements Serializable {
     private String name;
-    private Node visual;
     private boolean online;
 
     public Person(String name) {
         this.name = name;
-        visual = new Text(name);
         online = true;
     }
 
@@ -32,6 +30,6 @@ public class Person implements Serializable {
     }
 
     public Node getVisual() {
-        return visual;
+        return new Text(name);
     }
 }

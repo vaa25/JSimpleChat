@@ -10,10 +10,10 @@ import java.net.Socket;
  * @author Alexander Vlasov
  */
 public class ServerSocketHandler extends Service {
-    private final int port;
+    private ServerSocket serverSocket;
 
-    public ServerSocketHandler(int port) {
-        this.port = port;
+    public ServerSocketHandler(ServerSocket serverSocket) {
+        this.serverSocket = serverSocket;
     }
 
     @Override
@@ -21,7 +21,7 @@ public class ServerSocketHandler extends Service {
         return new Task() {
             @Override
             protected Socket call() throws Exception {
-                return new ServerSocket(port).accept();
+                return serverSocket.accept();
             }
         };
     }

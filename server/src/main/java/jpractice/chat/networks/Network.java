@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,29 +20,37 @@ public class Network {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObjectParser parser;
     private int port;
-    private ConcurrentHashMap<Socket, Person> map;
+    private ConcurrentHashMap<ObjectOutputStream, Person> map;
+    private ServerSocketHandler serverSocketHandler;
 
-
-    public Network(ConcurrentHashMap<Socket, Person> map, int port) throws IOException {
+    public Network(ConcurrentHashMap<ObjectOutputStream, Person> map, int port) throws IOException {
         this.port = port;
         this.map = map;
-        setServerSocketHandler();
+        launchServerSocketHandler();
         parser = new ObjectParser();
 
     }
 
-    private void setServerSocketHandler() {
-        ServerSocketHandler serverSocketHandler = new ServerSocketHandler(port);
+    private void launchServerSocketHandler() throws IOException {
+
+        serverSocketHandler = new ServerSocketHandler(new ServerSocket(port));
         serverSocketHandler.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
             @Override
             public void handle(WorkerStateEvent workerStateEvent) {
+                System.out.println("New connection found");
                 try {
+                    System.out.println("0");
                     Socket socket = (Socket) (workerStateEvent.getSource().getValue());
                     socket.setSoTimeout(1000 * 60 * 15);//15 минут
+                    System.out.println("1");
+
+                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                    System.out.println("2");
                     ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                    System.out.println("3");
                     Person person = (Person) (ois.readObject());
-                    map.putIfAbsent(socket, person);
-                    new Thread(new ObjectReceiver(ois, parser)).start();
+                    map.putIfAbsent(oos, person);
+                    new Thread(new ObjectReceiver(ois, person, parser)).start();
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                     return;
@@ -49,6 +58,7 @@ public class Network {
                     e.printStackTrace();
                     return;
                 }
+                serverSocketHandler.restart();
             }
         });
         serverSocketHandler.start();
@@ -56,21 +66,17 @@ public class Network {
 
     public Collection<Person> sendToAll(Object object) {
         Collection<Person> closed = new ArrayList<>();
-        Enumeration<Socket> sockets = map.keys();
+        Enumeration<ObjectOutputStream> sockets = map.keys();
         while (sockets.hasMoreElements()) {
-            Socket socket = sockets.nextElement();
-            if (socket.isClosed()) {
-                closed.add(map.get(socket));
-                map.remove(socket);
-            } else {
-                try {
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+            ObjectOutputStream oos = sockets.nextElement();
+            try {
                     oos.writeObject(object);
                     oos.flush();
-                } catch (IOException e) {
+            } catch (IOException e) {
                     e.printStackTrace();
+                closed.add(map.get(oos));
+                map.remove(oos);
                 }
-            }
         }
         return closed;
     }

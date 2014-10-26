@@ -32,7 +32,7 @@ public class ObjectReceiver implements Runnable {
                 logger.info(Thread.currentThread().getName() + " ObjectReceiver пытается принять произвольный объект");
                 Object object = in.readObject();
                 logger.info(Thread.currentThread().getName() + " ObjectReceiver принял объект " + object);
-                if (object != Special.HeartBeat) parser.put(object);
+                parser.put(object);
             } catch (EOFException e) {
                 logger.error(Thread.currentThread().getName() + " ObjectReceiver (" + Thread.currentThread().getName() + ") EOFException: ObjectInputStream closed first", e);
                 break;

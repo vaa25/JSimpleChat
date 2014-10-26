@@ -15,7 +15,7 @@ import javafx.scene.layout.VBox;
 import jpractice.chat.networks.*;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.io.ObjectOutputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.ResourceBundle;
@@ -25,7 +25,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Controller implements Initializable, NewPersonListener {
     final int serverPort = 20000;
-    private ConcurrentHashMap<Socket, Person> personSocketMap;
+    private ConcurrentHashMap<ObjectOutputStream, Person> oosPersonMap;
     private ObjectParser parser;
     private ObjectHandler objectHandler;
     private boolean connected;
@@ -40,7 +40,10 @@ public class Controller implements Initializable, NewPersonListener {
 
     @FXML
     void textEntered(ActionEvent event) {
-        sendToAll("Server: " + editText.getText());
+        String text = "Server: " + editText.getText();
+        commonArea.appendText(text);
+        sendToAll(text);
+        editText.clear();
     }
 
     private void connectionEstablished() {
@@ -57,7 +60,7 @@ public class Controller implements Initializable, NewPersonListener {
         Collection<Person> toRemove = network.sendToAll(object);
         for (Person person : toRemove) {
             person.setOnline(false);
-
+            System.out.println(person.getName() + " disconnected");
         }
         personVBox.getChildren().removeAll(toRemove);
     }
@@ -85,8 +88,8 @@ public class Controller implements Initializable, NewPersonListener {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            personSocketMap = new ConcurrentHashMap<>();
-            network = new Network(personSocketMap, serverPort);
+            oosPersonMap = new ConcurrentHashMap<>();
+            network = new Network(oosPersonMap, serverPort);
             connectionEstablished();
 
         } catch (IOException e) {
@@ -97,6 +100,7 @@ public class Controller implements Initializable, NewPersonListener {
 
     @Override
     public void addNewPerson(Person person) {
+        System.out.println(person.getName() + " connected");
         if (person.isOnline()) {
             personVBox.getChildren().addAll(person.getVisual());
         }

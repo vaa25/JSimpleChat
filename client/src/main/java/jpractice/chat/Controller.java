@@ -46,6 +46,8 @@ public class Controller implements Initializable {
 
     @FXML
     void textEntered(ActionEvent event) {
+        sender.sendObject(editText.getText());
+        editText.clear();
     }
 
     private void setMe() {
@@ -63,6 +65,7 @@ public class Controller implements Initializable {
         network.getParser().setEmergency(queue);
         setObjectHandler(queue);
         sender = network.getSender();
+        System.out.println(" Connection established");
     }
 
     private void removePerson(Person person) {
@@ -114,12 +117,14 @@ public class Controller implements Initializable {
         try {
             setMe();
             socket = new Socket(InetAddress.getLocalHost(), serverPort);
+            System.out.println(socket);
             network = new Network(socket);
             connectionEstablished();
             sender.sendObject(me);
             personList = new ArrayList<>();
         } catch (IOException e) {
             e.printStackTrace();
+
         }
 
     }

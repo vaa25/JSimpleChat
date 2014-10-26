@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Network {
@@ -15,8 +14,6 @@ public class Network {
     private Socket conn;
     private ObjectInputStream in;
     private ObjectOutputStream out;
-    private HeartBeatSender heartBeatSender;
-    private Thread noTimeOutThread;
     private ObjectSender sender;
     private ObjectReceiver receiver;
     private ObjectParser parser;
@@ -24,52 +21,25 @@ public class Network {
     private InetAddress host;
     private int port;
 
-    public Network() {
-    }
 
     public Network(Socket conn) throws IOException {
-        go(conn);
-    }
-
-    public Network(InetAddress host, int port) {
-        this.host = host;
-        this.port = port;
-    }
-
-    public ObjectInputStream getIn() {
-        return in;
-    }
-
-    public ObjectOutputStream getOut() {
-        return out;
-    }
-
-    public void go(Socket conn) throws IOException {
         //        logger.info( "Пытаюсь создать исходящий поток");
         out = new ObjectOutputStream(conn.getOutputStream());
+        System.out.println("1");
 //        logger.info( "Иcходящий поток успешно создан " + out);
 //        logger.info( "Пытаюсь создать входящий поток");
         in = new ObjectInputStream(conn.getInputStream());
+        System.out.println("2");
 //        logger.info( "Входящий поток успешно создан " + in);
         sender = new ObjectSender(out);
+        System.out.println("3");
         parser = new ObjectParser();
+        System.out.println("4");
         receiver = new ObjectReceiver(in, parser);
+        System.out.println("5");
         receiverThread = new Thread(receiver);
-        heartBeatSender = new HeartBeatSender(sender);
-        noTimeOutThread = new Thread(heartBeatSender);
-        noTimeOutThread.start();
-//        logger.info("network (" + Thread.currentThread().getName() + ") starts noTimeOutThread (" + noTimeOutThread.getName() + ")");
         receiverThread.start();
 //        logger.info("network (" + Thread.currentThread().getName() + ") starts receiverThread (" + receiverThread.getName() + ")");
-
-    }
-
-    private void go() throws IOException {
-        go(conn);
-    }
-
-    public void setAnyConnection() throws IOException {
-        if (!setClientConnection(host, port)) setServerConnection(port);
 
     }
 
@@ -81,48 +51,14 @@ public class Network {
         return parser;
     }
 
-    public boolean setClientConnection(InetAddress host, int port) {
-        logger.info("Устанавливаю клиентское соединение " + host + ":" + port);
-        try {
-            conn = new Socket(host, port);
-            go();
-        } catch (IOException e) {
-            logger.error("Клиентское соединение установить невозможно \n", e);
-            return false;
-        }
-        logger.info("Клиентское соединение установлено ", conn);
-        return true;
-    }
-
-    public void setServerConnection(int port) throws IOException {
-        logger.info("Устанавливаю серверное соединение");
-        ServerSocket server = new ServerSocket(port);
-        conn = server.accept();
-        go();
-        logger.info("Серверное соединение установлено ", conn);
-
-    }
 
     public void close() {
-        logger.info("Network (" + Thread.currentThread().getName() + ") try to interrupt noTimeOutThread (" + noTimeOutThread.getName() + ")");
-//        noTimeOut.interrupt();
-        noTimeOutThread.interrupt();
-//        logger.info("Network (" + Thread.currentThread().getName() + ") try to interrupt receiverThread (" + receiverThread.getName() + ")");
-////        receiver.interrupt();
-//        receiverThread.interrupt();
         try {
             in.close();
             out.close();
             conn.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }
-        try {
-//            logger.info("network (" + Thread.currentThread().getName() + ") try to join noTimeOutThread (" + noTimeOutThread.getName() + ")");
-            noTimeOutThread.join();
-//            logger.info("network (" + Thread.currentThread().getName() + ") noTimeOutThread (" + noTimeOutThread.getName() + ") joined");
-        } catch (InterruptedException e) {
-            logger.error("Network (" + Thread.currentThread().getName() + ") noTimeOutThread (" + noTimeOutThread.getName() + ") join InterruptedException");
         }
         try {
 //            logger.info("network (" + Thread.currentThread().getName() + ") try to join receiverThread (" + receiverThread.getName() + ")");
