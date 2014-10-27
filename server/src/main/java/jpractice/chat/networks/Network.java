@@ -22,10 +22,12 @@ public class Network {
     private int port;
     private ConcurrentHashMap<ObjectOutputStream, Person> map;
     private ServerSocketHandler serverSocketHandler;
+    private NewPersonListener personListener;
 
-    public Network(ConcurrentHashMap<ObjectOutputStream, Person> map, int port) throws IOException {
+    public Network(ConcurrentHashMap<ObjectOutputStream, Person> map, int port, NewPersonListener controller) throws IOException {
         this.port = port;
         this.map = map;
+        personListener = controller;
         launchServerSocketHandler();
         parser = new ObjectParser();
 
@@ -43,18 +45,14 @@ public class Network {
                     Socket socket = (Socket) (workerStateEvent.getSource().getValue());
                     socket.setSoTimeout(1000 * 60 * 15);//15 минут
                     System.out.println("1");
-
                     ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
                     System.out.println("2");
                     ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                     System.out.println("3");
-                    Person person = (Person) (ois.readObject());
-                    System.out.println(person.getName());
+                    Person person = new Person("loading");
                     map.putIfAbsent(oos, person);
                     new Thread(new ObjectReceiver(ois, person, parser)).start();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                    return;
+                    personListener.changePersonStatus(person);
                 } catch (IOException e) {
                     e.printStackTrace();
                     return;
@@ -71,13 +69,13 @@ public class Network {
         while (sockets.hasMoreElements()) {
             ObjectOutputStream oos = sockets.nextElement();
             try {
-                    oos.writeObject(object);
-                    oos.flush();
+                oos.writeObject(object);
+                oos.flush();
             } catch (IOException e) {
-                    e.printStackTrace();
+                e.printStackTrace();
                 closed.add(map.get(oos));
                 map.remove(oos);
-                }
+            }
         }
         return closed;
     }

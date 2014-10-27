@@ -29,6 +29,7 @@ public class ObjectReceiver implements Runnable {
     public void run() {
         while (true) {
             try {
+
                 logger.info(Thread.currentThread().getName() + " ObjectReceiver пытается принять произвольный объект");
                 Object object = in.readObject();
                 logger.info(Thread.currentThread().getName() + " ObjectReceiver принял объект " + object);

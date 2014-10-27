@@ -34,6 +34,9 @@ public class ObjectReceiver implements Runnable {
             try {
                 logger.info(Thread.currentThread().getName() + " ObjectReceiver " + person.getName() + " пытается принять произвольный объект");
                 Object object = in.readObject();
+                if (person == null && object.getClass().equals(Person.class)) {
+                    person = (Person) object;
+                }
                 logger.info(Thread.currentThread().getName() + " ObjectReceiver принял объект " + object);
                 parser.put(object);
 

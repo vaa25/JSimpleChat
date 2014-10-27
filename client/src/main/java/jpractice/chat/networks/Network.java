@@ -10,19 +10,24 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 public class Network {
+    public static final int NICKNAME = 1;
+    public static final int TEXT = 2;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private Socket conn;
-    private ObjectInputStream in;
     private ObjectOutputStream out;
+    private ObjectInputStream in;
     private ObjectSender sender;
     private ObjectReceiver receiver;
     private ObjectParser parser;
     private Thread receiverThread;
     private InetAddress host;
     private int port;
-
+    private byte[] data;
+    private int type;
 
     public Network(Socket conn) throws IOException {
+
+
         //        logger.info( "Пытаюсь создать исходящий поток");
         out = new ObjectOutputStream(conn.getOutputStream());
         System.out.println("1");
@@ -31,6 +36,7 @@ public class Network {
         in = new ObjectInputStream(conn.getInputStream());
         System.out.println("2");
 //        logger.info( "Входящий поток успешно создан " + in);
+
         sender = new ObjectSender(out);
         System.out.println("3");
         parser = new ObjectParser();
@@ -40,6 +46,24 @@ public class Network {
         receiverThread = new Thread(receiver);
         receiverThread.start();
 //        logger.info("network (" + Thread.currentThread().getName() + ") starts receiverThread (" + receiverThread.getName() + ")");
+
+    }
+
+    public boolean hasData() throws IOException {
+        if (in.available() == 0) return false;
+        in.mark(2000);
+        int type = in.read();
+        int length = in.read();
+        byte[] data = new byte[length];
+        int len = in.read(data);
+        if (len < length) {
+            in.reset();
+            return false;
+        }
+        this.data = data;
+        this.type = type;
+        return true;
+
 
     }
 

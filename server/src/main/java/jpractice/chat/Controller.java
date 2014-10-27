@@ -89,7 +89,7 @@ public class Controller implements Initializable, NewPersonListener {
     public void initialize(URL location, ResourceBundle resources) {
         try {
             oosPersonMap = new ConcurrentHashMap<>();
-            network = new Network(oosPersonMap, serverPort);
+            network = new Network(oosPersonMap, serverPort, this);
             connectionEstablished();
 
         } catch (IOException e) {
@@ -99,10 +99,13 @@ public class Controller implements Initializable, NewPersonListener {
     }
 
     @Override
-    public void addNewPerson(Person person) {
-        System.out.println(person.getName() + " connected");
+    public void changePersonStatus(Person person) {
         if (person.isOnline()) {
+            System.out.println(person.getName() + " connected");
             personVBox.getChildren().addAll(person.getVisual());
+        } else {
+            System.out.println(person.getName() + " disconnected");
+            personVBox.getChildren().removeAll(person.getVisual());
         }
     }
 }
