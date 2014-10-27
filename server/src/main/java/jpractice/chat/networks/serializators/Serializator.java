@@ -1,7 +1,5 @@
 package jpractice.chat.networks.serializators;
 
-import jpractice.chat.Person;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,16 +8,15 @@ import java.util.Map;
  *
  * Структура итогового массива байтов byte[]bytes:
  *
- * xx xx xx xx - длина итогового массива, извлекается  getLength(byte[] bytes)
- * xx - длина имени класса
- * xx - количество полей
+ * xx xx xx xx - длина итогового массива (int), извлекается  getLength(byte[] bytes)
+ * xx - длина имени класса (byte)
+ * xx ... xx - массив имени класса (String)
+ * xx - количество полей (byte)
  * xx ... xx - поля
  * поля:
  * xx xx xx xx - длина массива поля, извлекается  getLength(byte[] bytes)
- * xx - длина имени класса поля
- * xx - длина имени поля
+ * xx - длина имени класса поля (byte)
  * xx ... xx - массив имени класса поля
- * xx ... xx - массив имени поля
  * xx ... xx - массив значения поля, может содержать свои поля.
  *
  *  *длина имени класса (поля) включает в себя себя и остальные данные, принадлежащие классу (полю)
@@ -40,7 +37,7 @@ public abstract class Serializator<T> {
         codes.put(Integer.class, INTEGER);
         codes.put(int.class, INTEGER);
         codes.put(String.class, STRING);
-        codes.put(Person.class, PERSON);
+//        codes.put(Person.class, PERSON);
     }
 
     public static byte getCode(Class clazz) {
@@ -60,7 +57,7 @@ public abstract class Serializator<T> {
      */
 
     public static synchronized int getLength(byte[] bytes) {
-        return getLength(bytes, 1);
+        return getLength(bytes, 0);
 
     }
 
@@ -98,7 +95,7 @@ public abstract class Serializator<T> {
                 serializator = new PersonSerializator();
                 break;
             default:
-                throw new NotExpectedContent("Class not supported");
+                serializator = new ObjectSerializator();
         }
         return serializator.debuild(object);
     }
@@ -110,38 +107,68 @@ public abstract class Serializator<T> {
     /**
      * Извлечение отдельных полей в виде массивов из главного массива
      *
+     * xx xx xx xx - длина итогового массива (int), извлекается  getLength(byte[] bytes)
+     * xx - длина имени класса (byte)
+     * xx ... xx - массив имени класса (String)
+     * xx - количество полей (byte)
+     * xx ... xx - поля
+     * поля:
+     * xx xx xx xx - длина массива поля, извлекается  getLength(byte[] bytes)
+     * xx - длина имени класса поля (byte)
+     * xx ... xx - массив имени класса поля
+     * xx ... xx - массив значения поля, может содержать свои поля.
      * @param bytes главный массив
      *
      * @return массив массивов полей
      */
     public byte[][] split(byte[] bytes) {
-        int amount = bytes[5];
-        if (amount == 1) return new byte[][]{bytes};
-        int lenIndex = 7;
-        int startIndex = 6;
+        int classNameLen = bytes[4];
+        int startIndex = 5 + classNameLen;
+        int amount = bytes[startIndex - 1];
+//        if (amount == 1) return new byte[][]{bytes};
         byte[][] res = new byte[amount][];
         for (int i = 0; i < amount; i++) {
-            int len = getLength(bytes, lenIndex);
-            byte[] body = new byte[len + 1 + 4 + 1];
-            System.arraycopy(bytes, startIndex, body, 0, body.length);
+            int len = getLength(bytes, startIndex);
+            byte[] body = new byte[len];
+            System.arraycopy(bytes, startIndex, body, 0, len);
             res[i] = body;
-            startIndex += body.length;
-            lenIndex += body.length;
+            startIndex += len;
         }
         return res;
     }
 
+    /**
+     * xx xx xx xx - длина итогового массива (int), извлекается  getLength(byte[] bytes)
+     * xx - длина имени класса (byte)
+     * xx ... xx - массив имени класса (String)
+     * xx - количество полей (byte)
+     * xx ... xx - поля
+     * поля:
+     * xx xx xx xx - длина массива поля, извлекается  getLength(byte[] bytes)
+     * xx - длина имени класса поля (byte)
+     * xx ... xx - массив имени класса поля
+     * xx ... xx - массив значения поля, может содержать свои поля.
+     *
+     * @param clazz
+     * @param bytes
+     *
+     * @return
+     */
     public byte[] pack(Class clazz, byte[][] bytes) {
-        int length = 1 + 4 + 1;
+        String className = clazz.getName();
+        byte[] classNameB = getBytes(className);
+
+        int length = 4 + 1 + classNameB.length;
         for (int i = 0; i < bytes.length; i++) {
             length += bytes[i].length;
         }
         byte[] res = new byte[length];
-        res[0] = getCode(clazz);
         byte[] len = setLength(length);
-        System.arraycopy(len, 0, res, 1, 4);
-        res[5] = (byte) bytes.length;
-        int startIndex = 6;
+        System.arraycopy(len, 0, res, 0, 4);
+        res[4] = (byte) classNameB.length;
+        System.arraycopy(classNameB, 0, res, 4, classNameB.length);
+        int startIndex = 5 + classNameB.length;
+        res[startIndex - 1] = (byte)bytes.length;
         for (int i = 0; i < bytes.length; i++) {
             System.arraycopy(bytes[i], 0, res, startIndex, bytes[i].length);
             startIndex += bytes[i].length;

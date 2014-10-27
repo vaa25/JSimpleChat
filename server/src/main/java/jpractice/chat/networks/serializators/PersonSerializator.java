@@ -8,7 +8,7 @@ import jpractice.chat.Person;
 public class PersonSerializator extends Serializator<Person> {
     public static void main(String[] args) {
         PersonSerializator personSerializator = new PersonSerializator();
-        byte[] bytes = personSerializator.debuild(new Person("Alex"));
+        byte[] bytes = personSerializator.debuild(new Person("Саша"));
 //        bytes[0]=9;
 //        System.out.println(Arrays.toString(bytes));
         System.out.println(personSerializator.build(bytes).getName());
@@ -17,9 +17,9 @@ public class PersonSerializator extends Serializator<Person> {
 
     @Override
     public Person build(byte[] bytes) {
-        if (bytes[0] != Serializator.PERSON) {
-            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.PERSON);
-        }
+//        if (bytes[0] != Serializator.PERSON) {
+//            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.PERSON);
+//        }
         byte[][] splitted = split(bytes);
         StringSerializator stringSerializator = new StringSerializator();
         String name = stringSerializator.build(splitted[0]);

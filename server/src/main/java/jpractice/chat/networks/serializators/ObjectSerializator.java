@@ -11,16 +11,15 @@ import java.util.Arrays;
  *
  * Структура итогового массива байтов byte[]bytes:
  *
- * xx xx xx xx - длина итогового массива, извлекается  getLength(byte[] bytes)
- * xx - длина имени класса
- * xx - количество полей
+ * xx xx xx xx - длина итогового массива (int), извлекается  getLength(byte[] bytes)
+ * xx - длина имени класса (byte)
+ * xx ... xx - массив имени класса (String)
+ * xx - количество полей (byte)
  * xx ... xx - поля
  * поля:
  * xx xx xx xx - длина массива поля, извлекается  getLength(byte[] bytes)
- * xx - длина имени класса поля
- * xx - длина имени поля
+ * xx - длина имени класса поля (byte)
  * xx ... xx - массив имени класса поля
- * xx ... xx - массив имени поля
  * xx ... xx - массив значения поля, может содержать свои поля.
  *
  *  *длина имени класса (поля) включает в себя себя и остальные данные, принадлежащие классу (полю)
@@ -37,9 +36,7 @@ public class ObjectSerializator extends Serializator {
 
     @Override
     public Object build(byte[] bytes) {
-        if (bytes[0] != Serializator.PERSON) {
-            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.PERSON);
-        }
+
         byte[][] splitted = split(bytes);
         StringSerializator stringSerializator = new StringSerializator();
         String name = stringSerializator.build(splitted[0]);
@@ -81,7 +78,7 @@ public class ObjectSerializator extends Serializator {
                 System.out.println(getterName);
                 Object value = clazz.getMethod(getterName).invoke(object);
                 if (containsCode(value.getClass())) {
-                    bytes[i] = Serializator.getBytes(value);
+                    bytes[i] = getBytes(value);
                 } else {
                     bytes[i] = debuild(value);
                 }

@@ -20,23 +20,27 @@ public class StringSerializator extends Serializator<String> {
     @Override
     public byte[] debuild(String string) {
         byte[] stringB = Charset.defaultCharset().encode(string).array();
-        int stringBlen = stringB.length;
-        byte[] res = new byte[stringBlen + 6];
-        res[0] = Serializator.STRING;
-        byte[] len = setLength(stringBlen);
-        System.arraycopy(len, 0, res, 1, 4);
-        res[5] = 1;
-        System.arraycopy(stringB, 0, res, 6, stringBlen);
+
+        byte[] strNameB = "String".getBytes();
+        int strNBLen = strNameB.length;
+        byte[] res = new byte[5 + strNBLen + stringB.length];
+        byte[] len = setLength(res.length);
+        System.arraycopy(len, 0, res, 0, 4);
+        res[4] = (byte) strNBLen;
+        System.arraycopy(strNameB, 0, res, 5, strNBLen);
+        System.arraycopy(stringB, 0, res, 5 + strNBLen, stringB.length);
         return res;
+
     }
 
     @Override
     public String build(byte[] bytes) {
-        if (bytes[0] != Serializator.STRING) {
-            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.STRING);
-        }
-        int len = getLength(bytes);
-        String res = Charset.defaultCharset().decode(ByteBuffer.wrap(bytes, 6, len)).toString();
+//        if (bytes[0] != Serializator.STRING) {
+//            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.STRING);
+//        }
+        int start = bytes[4] + 5;
+        int len = bytes.length - start;
+        String res = Charset.defaultCharset().decode(ByteBuffer.wrap(bytes, start, len)).toString();
         return res;
     }
 
