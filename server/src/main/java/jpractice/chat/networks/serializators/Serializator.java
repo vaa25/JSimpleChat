@@ -1,27 +1,55 @@
 package jpractice.chat.networks.serializators;
 
+import jpractice.chat.Person;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Сериализация - разложение объектов на байты.
+ *
  * Структура итогового массива байтов byte[]bytes:
- * xx - код класса
- * xx xx xx xx - длина класса, извлекается  getLength(byte[] bytes)
+ *
+ * xx xx xx xx - длина итогового массива, извлекается  getLength(byte[] bytes)
+ * xx - длина имени класса
  * xx - количество полей
- * <p>
- * далее идут поля с такой же структурой
+ * xx ... xx - поля
+ * поля:
+ * xx xx xx xx - длина массива поля, извлекается  getLength(byte[] bytes)
+ * xx - длина имени класса поля
+ * xx - длина имени поля
+ * xx ... xx - массив имени класса поля
+ * xx ... xx - массив имени поля
+ * xx ... xx - массив значения поля, может содержать свои поля.
+ *
+ *  *длина имени класса (поля) включает в себя себя и остальные данные, принадлежащие классу (полю)
  *
  * @author Alexander Vlasov
  */
 public abstract class Serializator<T> {
-    static final byte String = 10;
-    static final byte Integer = 9;
-    static final byte Boolean = 8;
-    static final byte Person = 11;
-    private IntegerSerializator integerSerializator;
+    public static final byte STRING = 10;
+    public static final byte INTEGER = 9;
+    public static final byte BOOLEAN = 8;
+    public static final byte PERSON = 11;
 
-    public abstract T build(byte[] bytes);
+    private static Map<Class, Byte> codes = new HashMap<>();
 
-    public abstract byte[] debuild(T name);
-//    public abstract int length(byte[] bytes);
+    static {
+        codes.put(Boolean.class, BOOLEAN);
+        codes.put(boolean.class, BOOLEAN);
+        codes.put(Integer.class, INTEGER);
+        codes.put(int.class, INTEGER);
+        codes.put(String.class, STRING);
+        codes.put(Person.class, PERSON);
+    }
+
+    public static byte getCode(Class clazz) {
+        return codes.get(clazz);
+    }
+
+    public static boolean containsCode(Class clazz) {
+        return codes.containsKey(clazz);
+    }
 
     /**
      * Извлекает длину массива преобразованного объекта
@@ -30,7 +58,8 @@ public abstract class Serializator<T> {
      *
      * @return длина
      */
-    protected int getLength(byte[] bytes) {
+
+    public static synchronized int getLength(byte[] bytes) {
         return getLength(bytes, 1);
 
     }
@@ -43,7 +72,7 @@ public abstract class Serializator<T> {
      *
      * @return длина
      */
-    protected int getLength(byte[] bytes, int off) {
+    protected static int getLength(byte[] bytes, int off) {
         byte[] lengthB = new byte[4];
         System.arraycopy(bytes, off, lengthB, 0, 4);
         return (Byte.toUnsignedInt(lengthB[3]) << 24) +
@@ -51,6 +80,32 @@ public abstract class Serializator<T> {
                 (Byte.toUnsignedInt(lengthB[1]) << 8) +
                 Byte.toUnsignedInt(lengthB[0]);
     }
+//    public abstract int length(byte[] bytes);
+
+    public static byte[] getBytes(Object object) {
+        Serializator serializator;
+        switch (getCode(object.getClass())) {
+            case BOOLEAN:
+                serializator = new BooleanSerializator();
+                break;
+            case INTEGER:
+                serializator = new IntegerSerializator();
+                break;
+            case STRING:
+                serializator = new StringSerializator();
+                break;
+            case PERSON:
+                serializator = new PersonSerializator();
+                break;
+            default:
+                throw new NotExpectedContent("Class not supported");
+        }
+        return serializator.debuild(object);
+    }
+
+    public abstract T build(byte[] bytes);
+
+    public abstract byte[] debuild(T name);
 
     /**
      * Извлечение отдельных полей в виде массивов из главного массива
@@ -59,7 +114,7 @@ public abstract class Serializator<T> {
      *
      * @return массив массивов полей
      */
-    protected byte[][] split(byte[] bytes) {
+    public byte[][] split(byte[] bytes) {
         int amount = bytes[5];
         if (amount == 1) return new byte[][]{bytes};
         int lenIndex = 7;
@@ -76,13 +131,13 @@ public abstract class Serializator<T> {
         return res;
     }
 
-    protected byte[] pack(byte code, byte[][] bytes) {
+    public byte[] pack(Class clazz, byte[][] bytes) {
         int length = 1 + 4 + 1;
         for (int i = 0; i < bytes.length; i++) {
             length += bytes[i].length;
         }
         byte[] res = new byte[length];
-        res[0] = code;
+        res[0] = getCode(clazz);
         byte[] len = setLength(length);
         System.arraycopy(len, 0, res, 1, 4);
         res[5] = (byte) bytes.length;
@@ -101,7 +156,7 @@ public abstract class Serializator<T> {
      *
      * @return byte[4]
      */
-    protected byte[] setLength(int k) {
+    public byte[] setLength(int k) {
         byte[] res = new byte[4];
         res[0] = (byte) (k);
         res[1] = (byte) (k >> 8);

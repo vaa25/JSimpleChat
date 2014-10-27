@@ -15,11 +15,15 @@ public class IntegerSerializator extends Serializator<Integer> {
         System.out.println(serializator.build(bytes));
     }
 
+    public static int getLength(byte[] bytes) {
+        return 10;
+    }
+
     @Override
     public byte[] debuild(Integer k) {
 
         byte[] res = new byte[10];
-        res[0] = Serializator.Integer;
+        res[0] = Serializator.INTEGER;
         byte[] len = setLength(4);
         System.arraycopy(len, 0, res, 1, 4);
         res[6] = (byte) ((int) k);
@@ -32,17 +36,12 @@ public class IntegerSerializator extends Serializator<Integer> {
 
     @Override
     public Integer build(byte[] bytes) {
-        if (bytes[0] != Serializator.Integer) {
-            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.Integer);
+        if (bytes[0] != Serializator.INTEGER) {
+            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.INTEGER);
         }
         return (Byte.toUnsignedInt(bytes[9]) << 24) +
                 (Byte.toUnsignedInt(bytes[8]) << 16) +
                 (Byte.toUnsignedInt(bytes[7]) << 8) +
                 Byte.toUnsignedInt(bytes[6]);
-    }
-
-    @Override
-    public int getLength(byte[] bytes) {
-        return 10;
     }
 }

@@ -15,7 +15,7 @@ import javafx.scene.layout.VBox;
 import jpractice.chat.networks.*;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.ResourceBundle;
@@ -25,7 +25,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class Controller implements Initializable, NewPersonListener {
     final int serverPort = 20000;
-    private ConcurrentHashMap<ObjectOutputStream, Person> oosPersonMap;
+    private ConcurrentHashMap<OutputStream, Person> oosPersonMap;
     private ObjectParser parser;
     private ObjectHandler objectHandler;
     private boolean connected;

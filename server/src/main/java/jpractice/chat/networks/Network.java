@@ -3,12 +3,12 @@ package jpractice.chat.networks;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import jpractice.chat.Person;
+import jpractice.chat.networks.serializators.Serializator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -20,13 +20,15 @@ public class Network {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private ObjectParser parser;
     private int port;
-    private ConcurrentHashMap<ObjectOutputStream, Person> map;
+    private ConcurrentHashMap<OutputStream, Person> map;
+    private ConcurrentHashMap<OutputStream, MyObjectInputStream> map2;
     private ServerSocketHandler serverSocketHandler;
     private NewPersonListener personListener;
 
-    public Network(ConcurrentHashMap<ObjectOutputStream, Person> map, int port, NewPersonListener controller) throws IOException {
+    public Network(ConcurrentHashMap<OutputStream, Person> map, int port, NewPersonListener controller) throws IOException {
         this.port = port;
         this.map = map;
+        map2 = new ConcurrentHashMap<>();
         personListener = controller;
         launchServerSocketHandler();
         parser = new ObjectParser();
@@ -45,14 +47,13 @@ public class Network {
                     Socket socket = (Socket) (workerStateEvent.getSource().getValue());
                     socket.setSoTimeout(1000 * 60 * 15);//15 минут
                     System.out.println("1");
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                    OutputStream oos = socket.getOutputStream();
                     System.out.println("2");
-                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                    MyObjectInputStream ois = new MyObjectInputStream(socket.getInputStream());
+                    new Thread(ois).start();
                     System.out.println("3");
-                    Person person = new Person("loading");
-                    map.putIfAbsent(oos, person);
-                    new Thread(new ObjectReceiver(ois, person, parser)).start();
-                    personListener.changePersonStatus(person);
+                    map2.putIfAbsent(oos, ois);
+//                    personListener.changePersonStatus(person);
                 } catch (IOException e) {
                     e.printStackTrace();
                     return;
@@ -64,17 +65,20 @@ public class Network {
     }
 
     public Collection<Person> sendToAll(Object object) {
+
+        byte[] bytes = Serializator.getBytes(object);
+
         Collection<Person> closed = new ArrayList<>();
-        Enumeration<ObjectOutputStream> sockets = map.keys();
+        Enumeration<OutputStream> sockets = map.keys();
         while (sockets.hasMoreElements()) {
-            ObjectOutputStream oos = sockets.nextElement();
+            OutputStream oos = sockets.nextElement();
             try {
-                oos.writeObject(object);
+                oos.write(bytes);
                 oos.flush();
             } catch (IOException e) {
                 e.printStackTrace();
-                closed.add(map.get(oos));
-                map.remove(oos);
+                closed.add(map.remove(oos));
+                map2.remove(oos);
             }
         }
         return closed;

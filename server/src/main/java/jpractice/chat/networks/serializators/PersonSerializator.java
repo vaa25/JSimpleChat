@@ -17,8 +17,8 @@ public class PersonSerializator extends Serializator<Person> {
 
     @Override
     public Person build(byte[] bytes) {
-        if (bytes[0] != Serializator.Person) {
-            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.Person);
+        if (bytes[0] != Serializator.PERSON) {
+            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.PERSON);
         }
         byte[][] splitted = split(bytes);
         StringSerializator stringSerializator = new StringSerializator();
@@ -36,12 +36,13 @@ public class PersonSerializator extends Serializator<Person> {
     @Override
     public byte[] debuild(Person person) {
         byte[][] bytes = new byte[2][];
+
         StringSerializator stringSerializator = new StringSerializator();
         byte[] name = stringSerializator.debuild(person.getName());
         BooleanSerializator booleanSerializator = new BooleanSerializator();
         byte[] online = booleanSerializator.debuild(person.isOnline());
         bytes[0] = name;
         bytes[1] = online;
-        return pack(Serializator.Person, bytes);
+        return pack(Person.class, bytes);
     }
 }

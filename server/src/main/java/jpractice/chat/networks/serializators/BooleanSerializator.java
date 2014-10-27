@@ -15,10 +15,14 @@ public class BooleanSerializator extends Serializator<Boolean> {
         System.out.println(serializator.build(bytes));
     }
 
+    public static int getLength(byte[] bytes) {
+        return 7;
+    }
+
     @Override
     public byte[] debuild(Boolean k) {
         byte[] res = new byte[2 + 4 + 1];
-        res[0] = Serializator.Boolean;
+        res[0] = Serializator.BOOLEAN;
         byte[] len = setLength(1);
         System.arraycopy(len, 0, res, 1, 4);
         res[5] = 1;
@@ -28,14 +32,9 @@ public class BooleanSerializator extends Serializator<Boolean> {
 
     @Override
     public Boolean build(byte[] bytes) {
-        if (bytes[0] != Serializator.Boolean) {
-            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.Boolean);
+        if (bytes[0] != Serializator.BOOLEAN) {
+            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.BOOLEAN);
         }
         return bytes[6] == 1;
-    }
-
-    @Override
-    public int getLength(byte[] bytes) {
-        return 7;
     }
 }

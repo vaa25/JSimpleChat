@@ -22,7 +22,7 @@ public class StringSerializator extends Serializator<String> {
         byte[] stringB = Charset.defaultCharset().encode(string).array();
         int stringBlen = stringB.length;
         byte[] res = new byte[stringBlen + 6];
-        res[0] = Serializator.String;
+        res[0] = Serializator.STRING;
         byte[] len = setLength(stringBlen);
         System.arraycopy(len, 0, res, 1, 4);
         res[5] = 1;
@@ -32,8 +32,8 @@ public class StringSerializator extends Serializator<String> {
 
     @Override
     public String build(byte[] bytes) {
-        if (bytes[0] != Serializator.String) {
-            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.String);
+        if (bytes[0] != Serializator.STRING) {
+            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.STRING);
         }
         int len = getLength(bytes);
         String res = Charset.defaultCharset().decode(ByteBuffer.wrap(bytes, 6, len)).toString();
