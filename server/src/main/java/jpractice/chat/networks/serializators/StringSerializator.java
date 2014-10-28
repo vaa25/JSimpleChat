@@ -1,5 +1,6 @@
 package jpractice.chat.networks.serializators;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -21,7 +22,13 @@ public class StringSerializator extends Serializator<String> {
     @Override
     public <T> byte[] debuild(T string) {
         String value = (String) string;
-        byte[] stringB = Charset.forName("UTF-8").encode(value).array();
+        byte[] stringB = null;
+        try {
+            stringB = value.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+//        byte[] stringB = Charset.forName("UTF-8").encode(value).array();
         byte[] res = new byte[5 + stringB.length];
         byte[] len = setLength(res.length);
         res[0] = STRING;
