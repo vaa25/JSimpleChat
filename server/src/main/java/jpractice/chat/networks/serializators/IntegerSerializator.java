@@ -7,43 +7,35 @@ import java.util.Arrays;
  */
 public class IntegerSerializator extends Serializator<Integer> {
     public static void main(String[] args) {
-        IntegerSerializator serializator = new IntegerSerializator();
+        Serializator serializator = new Serializator();
         byte[] bytes = serializator.debuild(1239487);
 //        bytes[0]=9;
         System.out.println();
         System.out.println(Arrays.toString(bytes));
-        System.out.println(serializator.build(bytes));
+        System.out.println(serializator.build(1, bytes));
     }
 
     public static int getLength(byte[] bytes) {
-        return 10;
+        return 5;
     }
 
     @Override
-    public byte[] debuild(Integer k) {
-        byte[] intNameB = "int".getBytes();
-        int intNBLen = intNameB.length;
-        byte[] res = new byte[9 + intNBLen];
-        byte[] len = setLength(res.length);
-        System.arraycopy(len, 0, res, 0, 4);
-        res[4] = (byte) intNBLen;
-        System.arraycopy(intNameB, 0, res, 5, intNBLen);
-        res[5 + intNBLen] = (byte) ((int) k);
-        res[6 + intNBLen] = (byte) (k >> 8);
-        res[7 + intNBLen] = (byte) (k >> 16);
-        res[8 + intNBLen] = (byte) (k >> 24);
+    public <T> byte[] debuild(T k) {
+        int l = (Integer) k;
+        byte[] res = new byte[5];
+        res[0] = INTEGER;
+        res[1] = (byte) (l);
+        res[2] = (byte) (l >> 8);
+        res[3] = (byte) (l >> 16);
+        res[4] = (byte) (l >> 24);
         return res;
     }
 
     @Override
-    public Integer build(byte[] bytes) {
-//        if (bytes[0] != Serializator.INTEGER) {
-//            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.INTEGER);
-//        }
-        int bytesLen = bytes.length;
-        return (Byte.toUnsignedInt(bytes[bytesLen - 1]) << 24) +
-                (Byte.toUnsignedInt(bytes[bytesLen - 2]) << 16) +
-                (Byte.toUnsignedInt(bytes[bytesLen - 3]) << 8) +
-                Byte.toUnsignedInt(bytes[bytesLen - 4]);
+    public Integer build(byte[] bytes, int off) {
+        return (Byte.toUnsignedInt(bytes[off + 4]) << 24) +
+                (Byte.toUnsignedInt(bytes[off + 3]) << 16) +
+                (Byte.toUnsignedInt(bytes[off + 2]) << 8) +
+                Byte.toUnsignedInt(bytes[off + 1]);
     }
 }

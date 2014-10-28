@@ -2,24 +2,23 @@ package jpractice.chat.networks.serializators;
 
 import jpractice.chat.Person;
 
+import java.util.Arrays;
+
 /**
  * @author Alexander Vlasov
  */
 public class PersonSerializator extends Serializator<Person> {
     public static void main(String[] args) {
-        PersonSerializator personSerializator = new PersonSerializator();
-        byte[] bytes = personSerializator.debuild(new Person("Саша"));
+        Serializator serializator = new Serializator();
+        byte[] bytes = serializator.debuild(new Person("Саша"));
 //        bytes[0]=9;
-//        System.out.println(Arrays.toString(bytes));
-        System.out.println(personSerializator.build(bytes).getName());
+        System.out.println(Arrays.toString(bytes));
+        System.out.println(((Person) (serializator.build(new Person(""), bytes))).getName());
 
     }
 
     @Override
-    public Person build(byte[] bytes) {
-//        if (bytes[0] != Serializator.PERSON) {
-//            throw new NotExpectedContent(bytes[0] + " instead of " + Serializator.PERSON);
-//        }
+    public Person build(byte[] bytes, int off) {
         byte[][] splitted = split(bytes);
         StringSerializator stringSerializator = new StringSerializator();
         String name = stringSerializator.build(splitted[0]);
@@ -33,7 +32,7 @@ public class PersonSerializator extends Serializator<Person> {
 
     }
 
-    @Override
+    //    @Override
     public byte[] debuild(Person person) {
         byte[][] bytes = new byte[2][];
 
@@ -42,7 +41,9 @@ public class PersonSerializator extends Serializator<Person> {
         BooleanSerializator booleanSerializator = new BooleanSerializator();
         byte[] online = booleanSerializator.debuild(person.isOnline());
         bytes[0] = name;
+        System.out.println(Arrays.toString(bytes[0]));
         bytes[1] = online;
+        System.out.println(Arrays.toString(bytes[1]));
         return pack(Person.class, bytes);
     }
 }

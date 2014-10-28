@@ -35,19 +35,57 @@ public class ObjectSerializator extends Serializator {
     }
 
     @Override
-    public Object build(byte[] bytes) {
+    public Object build(byte[] bytes, int off) {
+        if (bytes[0] == CLASS) {
+            Serializator serializator = new StringSerializator();
 
-        byte[][] splitted = split(bytes);
-        StringSerializator stringSerializator = new StringSerializator();
-        String name = stringSerializator.build(splitted[0]);
-        BooleanSerializator booleanSerializator = new BooleanSerializator();
-        boolean online = booleanSerializator.build(splitted[1]);
-        System.out.println(name);
-        System.out.println(online);
-        Person person = new Person(name);
-        person.setOnline(online);
-        return person;
-//        return null;
+            String className = (String) serializator.build(bytes, 5);
+            try {
+                Class clazz = Class.forName(className);
+                Object object = (clazz.newInstance());
+                Field[] fields = clazz.getDeclaredFields();
+                byte[][] splitted = split(bytes);
+
+                for (int i = 0; i < fields.length; i++) {
+
+                    Field field = fields[i];
+                    Class fieldClass = field.getType();
+                    String fieldName = field.getName();
+                    Character.toUpperCase(fieldName.charAt(0));
+                    String setterName = "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+                    System.out.println(setterName);
+                    Object sample;
+                    if (fieldClass == Boolean.class || fieldClass == boolean.class) sample = new Boolean(true);
+                    else sample = fieldClass.newInstance();
+                    Object value = build(sample, splitted[i]);
+                    clazz.getMethod(setterName, fieldClass).invoke(object, value);
+                }
+                return object;
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+//            } catch (InvocationTargetException e) {
+//                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
+
+//        StringSerializator stringSerializator = new StringSerializator();
+//        String name = stringSerializator.build(splitted[0]);
+//        BooleanSerializator booleanSerializator = new BooleanSerializator();
+//        boolean online = booleanSerializator.build(splitted[1]);
+//        System.out.println(name);
+//        System.out.println(online);
+//        Person person = new Person(name);
+//        person.setOnline(online);
+//        return person;
+        return null;
 
     }
 
@@ -78,7 +116,8 @@ public class ObjectSerializator extends Serializator {
                 System.out.println(getterName);
                 Object value = clazz.getMethod(getterName).invoke(object);
                 if (containsCode(value.getClass())) {
-                    bytes[i] = getBytes(value);
+//                    bytes[i] = getBytes(value);
+                    bytes[i] = super.debuild(value);
                 } else {
                     bytes[i] = debuild(value);
                 }

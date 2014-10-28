@@ -3,7 +3,6 @@ package jpractice.chat.networks;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import jpractice.chat.Person;
-import jpractice.chat.networks.serializators.Serializator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +12,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Network {
@@ -66,21 +64,21 @@ public class Network {
 
     public Collection<Person> sendToAll(Object object) {
 
-        byte[] bytes = Serializator.getBytes(object);
 
         Collection<Person> closed = new ArrayList<>();
-        Enumeration<OutputStream> sockets = map.keys();
-        while (sockets.hasMoreElements()) {
-            OutputStream oos = sockets.nextElement();
-            try {
-                oos.write(bytes);
-                oos.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-                closed.add(map.remove(oos));
-                map2.remove(oos);
-            }
-        }
+//        byte[] bytes = Serializator.getBytes(object);
+//        Enumeration<OutputStream> sockets = map.keys();
+//        while (sockets.hasMoreElements()) {
+//            OutputStream oos = sockets.nextElement();
+//            try {
+//                oos.write(bytes);
+//                oos.flush();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                closed.add(map.remove(oos));
+//                map2.remove(oos);
+//            }
+//        }
         return closed;
     }
 
