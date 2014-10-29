@@ -16,12 +16,11 @@ public class StringSerializator extends Serializator<String> {
 //        bytes[0]=9;
         System.out.println(Arrays.toString(bytes));
 //        System.out.println(serializator.build(bytes));
-        System.out.println(serializator.build("", bytes));
+        System.out.println(serializator.build(bytes));
     }
 
     @Override
-    public <T> byte[] debuild(T string) {
-        String value = (String) string;
+    public byte[] debuild(String value) {
         byte[] stringB = null;
         try {
             stringB = value.getBytes("UTF-8");
@@ -37,8 +36,10 @@ public class StringSerializator extends Serializator<String> {
         return res;
 
     }
-
     @Override
+    public String build(byte[] bytes) {
+        return build(bytes, 0);
+    }
     public String build(byte[] bytes, int off) {
         int start = off + 5;
         int len = getLength(bytes, off + 1) - 5;

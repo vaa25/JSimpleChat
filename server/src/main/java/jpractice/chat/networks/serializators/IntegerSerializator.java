@@ -12,7 +12,7 @@ public class IntegerSerializator extends Serializator<Integer> {
 //        bytes[0]=9;
         System.out.println();
         System.out.println(Arrays.toString(bytes));
-        System.out.println(serializator.build(1, bytes));
+        System.out.println(serializator.build(bytes));
     }
 
     public static int getLength(byte[] bytes) {
@@ -20,11 +20,10 @@ public class IntegerSerializator extends Serializator<Integer> {
     }
 
     @Override
-    public <T> byte[] debuild(T k) {
-        int l = (Integer) k;
+    public byte[] debuild(Integer l) {
         byte[] res = new byte[5];
         res[0] = INTEGER;
-        res[1] = (byte) (l);
+        res[1] = (byte) ((int) l);
         res[2] = (byte) (l >> 8);
         res[3] = (byte) (l >> 16);
         res[4] = (byte) (l >> 24);

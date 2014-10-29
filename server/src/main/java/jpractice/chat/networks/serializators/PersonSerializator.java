@@ -13,7 +13,7 @@ public class PersonSerializator extends Serializator<Person> {
         byte[] bytes = serializator.debuild(new Person("Саша"));
 //        bytes[0]=9;
         System.out.println(Arrays.toString(bytes));
-        System.out.println(((Person) (serializator.build(new Person(""), bytes))).getName());
+        System.out.println(((Person) (serializator.build(bytes))).getName());
 
     }
 
@@ -24,15 +24,15 @@ public class PersonSerializator extends Serializator<Person> {
         String name = stringSerializator.build(splitted[0]);
         BooleanSerializator booleanSerializator = new BooleanSerializator();
         boolean online = booleanSerializator.build(splitted[1]);
-        System.out.println(name);
-        System.out.println(online);
+//        System.out.println(name);
+//        System.out.println(online);
         Person person = new Person(name);
         person.setOnline(online);
         return person;
 
     }
 
-    //    @Override
+    @Override
     public byte[] debuild(Person person) {
         byte[][] bytes = new byte[2][];
 
@@ -41,9 +41,9 @@ public class PersonSerializator extends Serializator<Person> {
         BooleanSerializator booleanSerializator = new BooleanSerializator();
         byte[] online = booleanSerializator.debuild(person.isOnline());
         bytes[0] = name;
-        System.out.println(Arrays.toString(bytes[0]));
+//        System.out.println(Arrays.toString(bytes[0]));
         bytes[1] = online;
-        System.out.println(Arrays.toString(bytes[1]));
+//        System.out.println(Arrays.toString(bytes[1]));
         return pack(Person.class, bytes);
     }
 }

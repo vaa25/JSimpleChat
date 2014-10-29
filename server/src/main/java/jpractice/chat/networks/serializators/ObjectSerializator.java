@@ -3,11 +3,10 @@ package jpractice.chat.networks.serializators;
 import jpractice.chat.Person;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
 /**
- * Сериализатор для POJO объектов
+ * Сериализатор для объектов
  *
  * Структура итогового массива байтов byte[]bytes:
  *
@@ -28,12 +27,24 @@ import java.util.Arrays;
  */
 public class ObjectSerializator extends Serializator {
     public static void main(String[] args) {
-        Serializator serializator = new ObjectSerializator();
-        System.out.println(Arrays.toString(serializator.debuild(new Person("Alex"))));
-        serializator = new PersonSerializator();
-        System.out.println(Arrays.toString(serializator.debuild(new Person("Alex"))));
+        test(new Serializator(), new Person("Alex"));
+        test(new PersonSerializator(), new Person("Alex"));
+        test(new ObjectSerializator(), new Person("Alex"));
+
     }
 
+    private static void test(Serializator serializator, Object object) {
+        System.out.println(serializator.getClass().getSimpleName());
+        byte[] bytes = serializator.debuild(object);
+        System.out.println(Arrays.toString(bytes));
+
+        System.out.println(serializator.build(bytes));
+        System.out.println();
+    }
+
+    public Object build(byte[] bytes) {
+        return build(bytes, 0);
+    }
     @Override
     public Object build(byte[] bytes, int off) {
         if (bytes[0] == CLASS) {
@@ -49,16 +60,18 @@ public class ObjectSerializator extends Serializator {
                 for (int i = 0; i < fields.length; i++) {
 
                     Field field = fields[i];
-                    Class fieldClass = field.getType();
-                    String fieldName = field.getName();
-                    Character.toUpperCase(fieldName.charAt(0));
-                    String setterName = "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-                    System.out.println(setterName);
-                    Object sample;
-                    if (fieldClass == Boolean.class || fieldClass == boolean.class) sample = new Boolean(true);
-                    else sample = fieldClass.newInstance();
-                    Object value = build(sample, splitted[i]);
-                    clazz.getMethod(setterName, fieldClass).invoke(object, value);
+                    field.setAccessible(true);
+//                    Class fieldClass = field.getType();
+//                    String fieldName = field.getName();
+//                    Character.toUpperCase(fieldName.charAt(0));
+//                    String setterName = "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+////                    System.out.println(setterName);
+//                    Object sample;
+//                    if (fieldClass == Boolean.class || fieldClass == boolean.class) sample = new Boolean(true);
+//                    else sample = fieldClass.newInstance();
+                    Object value = super.build(splitted[i]);
+                    field.set(object, value);
+//                    clazz.getMethod(setterName, fieldClass).invoke(object, value);
                 }
                 return object;
             } catch (ClassNotFoundException e) {
@@ -66,12 +79,6 @@ public class ObjectSerializator extends Serializator {
             } catch (InstantiationException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-//            } catch (InvocationTargetException e) {
-//                e.printStackTrace();
-            } catch (InvocationTargetException e) {
                 e.printStackTrace();
             }
         }
@@ -102,29 +109,28 @@ public class ObjectSerializator extends Serializator {
 //            System.out.println(field.getType());
 //            System.out.println(field.getName());
 //            System.out.println(field.toString());
+            field.setAccessible(true);
             Class fieldClass = field.getType();
-            String getterPrefix;
-            if (getCode(fieldClass) == BOOLEAN) {
-                getterPrefix = "is";
-            } else {
-                getterPrefix = "get";
-            }
+//            String getterPrefix;
+//            if (getCode(fieldClass) == BOOLEAN) {
+//                getterPrefix = "is";
+//            } else {
+//                getterPrefix = "get";
+//            }
             try {
-                String fieldName = field.getName();
-                Character.toUpperCase(fieldName.charAt(0));
-                String getterName = getterPrefix + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-                System.out.println(getterName);
-                Object value = clazz.getMethod(getterName).invoke(object);
+//                String fieldName = field.getName();
+//                Character.toUpperCase(fieldName.charAt(0));
+//                String getterName = getterPrefix + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+//                System.out.println(getterName);
+//                Object value = clazz.getMethod(getterName).invoke(object);
+                Object value = field.get(object);
                 if (containsCode(value.getClass())) {
 //                    bytes[i] = getBytes(value);
                     bytes[i] = super.debuild(value);
                 } else {
                     bytes[i] = debuild(value);
                 }
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
+
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }

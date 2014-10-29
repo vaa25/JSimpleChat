@@ -35,7 +35,7 @@ public class Serializator<T> {
 
 
     private static Map<Class, Byte> codes = new HashMap<>();
-    private static Map<Byte, Integer> lengths = new HashMap<>();
+    private static Map<Byte, Integer> lengths = new HashMap<Byte, Integer>();
 
     static {
         codes.put(Boolean.class, BOOLEAN);
@@ -89,7 +89,7 @@ public class Serializator<T> {
     }
 //    public abstract int length(byte[] bytes);
 
-    public <V> byte[] debuild(V object) {
+    public byte[] debuild(T object) {
         Serializator serializator;
         switch (getCode(object.getClass())) {
             case BOOLEAN:
@@ -110,9 +110,9 @@ public class Serializator<T> {
     //    public <V>V build (Class clazz,byte[]bytes){
 //        return clazz.newInstance()
 //    }
-    public <V> V build(V object, byte[] bytes) {
+    public T build(byte[] bytes) {
         Serializator serializator;
-        switch (getCode(object.getClass())) {
+        switch (bytes[0]) {
             case BOOLEAN:
                 serializator = new BooleanSerializator();
                 break;
@@ -125,12 +125,12 @@ public class Serializator<T> {
             default:
                 serializator = new ObjectSerializator();
         }
-        return (V) serializator.build(bytes);
+        return (T) serializator.build(bytes);
     }
 
-    public T build(byte[] bytes) {
-        return build(bytes, 0);
-    }
+//    public T build(byte[] bytes) {
+//        return build(bytes, 0);
+//    }
 
     public T build(byte[] bytes, int off) {
         return null;

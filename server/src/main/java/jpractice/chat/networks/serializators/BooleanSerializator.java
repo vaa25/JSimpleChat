@@ -24,14 +24,17 @@ public class BooleanSerializator extends Serializator<Boolean> {
     }
 
     @Override
-    public <T> byte[] debuild(T k) {
-        boolean l = (Boolean) k;
+    public byte[] debuild(Boolean l) {
         byte[] res = new byte[2];
         res[0] = BOOLEAN;
         res[1] = (byte) (l ? 1 : 0);
         return res;
     }
 
+    @Override
+    public Boolean build(byte[] bytes) {
+        return build(bytes, 0);
+    }
     @Override
     public Boolean build(byte[] bytes, int off) {
         return bytes[off + 1] == 1;
