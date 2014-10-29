@@ -44,10 +44,10 @@ public class ObjectSerializator {
         return build(bytes, 0);
     }
     public Object build(byte[] bytes, int off) {
-        if (bytes[0] == Serializator.CLASS) {
+        if (bytes[off] == Serializator.CLASS) {
             StringSerializator serializator = new StringSerializator();
 
-            String className = (String) serializator.build(bytes, 5);
+            String className = (String) serializator.build(bytes, off + 5);
             try {
                 Class clazz = Class.forName(className);
                 Object object = (clazz.newInstance());
@@ -75,7 +75,6 @@ public class ObjectSerializator {
 
     }
 
-    //    @Override
     public byte[] debuild(Object object) {
         Class clazz = object.getClass();
 
@@ -87,7 +86,6 @@ public class ObjectSerializator {
             try {
                 Object value = field.get(object);
                 if (Serializator.containsCode(value.getClass())) {
-//                    bytes[i] = getBytes(value);
                     bytes[i] = Serializator.debuild(value);
                 } else {
                     bytes[i] = debuild(value);

@@ -140,10 +140,14 @@ public class Serializator {
      * @return массив массивов полей
      */
     public static byte[][] split(byte[] bytes) {
-        if (codes.containsKey(bytes[0])) return new byte[][]{bytes};
+        return split(bytes, 0);
+    }
+
+    public static byte[][] split(byte[] bytes, int off) {
+        if (codes.containsKey(bytes[off])) return new byte[][]{bytes};
         else {
-            int classNameLen = getLength(bytes, 6);
-            int startIndex = 6 + classNameLen;
+            int classNameLen = getLength(bytes, off + 6);
+            int startIndex = off + 6 + classNameLen;
             int amount = bytes[startIndex - 1];
             byte[][] res = new byte[amount][];
             for (int i = 0; i < amount; i++) {
