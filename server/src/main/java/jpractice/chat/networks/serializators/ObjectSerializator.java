@@ -25,11 +25,9 @@ import java.util.Arrays;
  *
  * @author Alexander Vlasov
  */
-public class ObjectSerializator extends Serializator {
+public class ObjectSerializator {
     public static void main(String[] args) {
         test(new Serializator(), new Person("Alex"));
-        test(new PersonSerializator(), new Person("Alex"));
-        test(new ObjectSerializator(), new Person("Alex"));
 
     }
 
@@ -45,33 +43,23 @@ public class ObjectSerializator extends Serializator {
     public Object build(byte[] bytes) {
         return build(bytes, 0);
     }
-    @Override
     public Object build(byte[] bytes, int off) {
-        if (bytes[0] == CLASS) {
-            Serializator serializator = new StringSerializator();
+        if (bytes[0] == Serializator.CLASS) {
+            StringSerializator serializator = new StringSerializator();
 
             String className = (String) serializator.build(bytes, 5);
             try {
                 Class clazz = Class.forName(className);
                 Object object = (clazz.newInstance());
                 Field[] fields = clazz.getDeclaredFields();
-                byte[][] splitted = split(bytes);
+                byte[][] splitted = Serializator.split(bytes);
 
                 for (int i = 0; i < fields.length; i++) {
 
                     Field field = fields[i];
                     field.setAccessible(true);
-//                    Class fieldClass = field.getType();
-//                    String fieldName = field.getName();
-//                    Character.toUpperCase(fieldName.charAt(0));
-//                    String setterName = "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-////                    System.out.println(setterName);
-//                    Object sample;
-//                    if (fieldClass == Boolean.class || fieldClass == boolean.class) sample = new Boolean(true);
-//                    else sample = fieldClass.newInstance();
-                    Object value = super.build(splitted[i]);
+                    Object value = Serializator.build(splitted[i]);
                     field.set(object, value);
-//                    clazz.getMethod(setterName, fieldClass).invoke(object, value);
                 }
                 return object;
             } catch (ClassNotFoundException e) {
@@ -83,50 +71,24 @@ public class ObjectSerializator extends Serializator {
             }
         }
 
-//        StringSerializator stringSerializator = new StringSerializator();
-//        String name = stringSerializator.build(splitted[0]);
-//        BooleanSerializator booleanSerializator = new BooleanSerializator();
-//        boolean online = booleanSerializator.build(splitted[1]);
-//        System.out.println(name);
-//        System.out.println(online);
-//        Person person = new Person(name);
-//        person.setOnline(online);
-//        return person;
         return null;
 
     }
 
-    @Override
+    //    @Override
     public byte[] debuild(Object object) {
         Class clazz = object.getClass();
-//        System.out.println(clazz);
 
         Field[] fields = clazz.getDeclaredFields();
-//        System.out.println(Arrays.toString(fields));
         byte[][] bytes = new byte[fields.length][];
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
-//            System.out.println(field.getType());
-//            System.out.println(field.getName());
-//            System.out.println(field.toString());
             field.setAccessible(true);
-            Class fieldClass = field.getType();
-//            String getterPrefix;
-//            if (getCode(fieldClass) == BOOLEAN) {
-//                getterPrefix = "is";
-//            } else {
-//                getterPrefix = "get";
-//            }
             try {
-//                String fieldName = field.getName();
-//                Character.toUpperCase(fieldName.charAt(0));
-//                String getterName = getterPrefix + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-//                System.out.println(getterName);
-//                Object value = clazz.getMethod(getterName).invoke(object);
                 Object value = field.get(object);
-                if (containsCode(value.getClass())) {
+                if (Serializator.containsCode(value.getClass())) {
 //                    bytes[i] = getBytes(value);
-                    bytes[i] = super.debuild(value);
+                    bytes[i] = Serializator.debuild(value);
                 } else {
                     bytes[i] = debuild(value);
                 }
@@ -135,6 +97,8 @@ public class ObjectSerializator extends Serializator {
                 e.printStackTrace();
             }
         }
-        return pack(clazz, bytes);
+        return Serializator.pack(clazz, bytes);
     }
+
+
 }

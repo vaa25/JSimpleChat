@@ -27,7 +27,7 @@ import java.util.Map;
  *
  * @author Alexander Vlasov
  */
-public class Serializator<T> {
+public class Serializator {
     public static final byte STRING = 10;
     public static final byte INTEGER = 9;
     public static final byte BOOLEAN = 8;
@@ -43,7 +43,6 @@ public class Serializator<T> {
         codes.put(Integer.class, INTEGER);
         codes.put(int.class, INTEGER);
         codes.put(String.class, STRING);
-//        codes.put(Person.class, PERSON);
 
         lengths.put(BOOLEAN, 2);
         lengths.put(INTEGER, 5);
@@ -87,58 +86,33 @@ public class Serializator<T> {
                 (Byte.toUnsignedInt(lengthB[1]) << 8) +
                 Byte.toUnsignedInt(lengthB[0]);
     }
-//    public abstract int length(byte[] bytes);
 
-    public byte[] debuild(T object) {
-        Serializator serializator;
+    public static byte[] debuild(Object object) {
         switch (getCode(object.getClass())) {
             case BOOLEAN:
-                serializator = new BooleanSerializator();
-                break;
+                return new BooleanSerializator().debuild(object);
             case INTEGER:
-                serializator = new IntegerSerializator();
-                break;
+                return new IntegerSerializator().debuild(object);
             case STRING:
-                serializator = new StringSerializator();
-                break;
+                return new StringSerializator().debuild(object);
             default:
-                serializator = new ObjectSerializator();
+                return new ObjectSerializator().debuild(object);
         }
-        return serializator.debuild(object);
     }
 
-    //    public <V>V build (Class clazz,byte[]bytes){
-//        return clazz.newInstance()
-//    }
-    public T build(byte[] bytes) {
-        Serializator serializator;
+    public static Object build(byte[] bytes) {
         switch (bytes[0]) {
             case BOOLEAN:
-                serializator = new BooleanSerializator();
-                break;
+                return new BooleanSerializator().build(bytes);
             case INTEGER:
-                serializator = new IntegerSerializator();
-                break;
+                return new IntegerSerializator().build(bytes);
             case STRING:
-                serializator = new StringSerializator();
-                break;
+                return new StringSerializator().build(bytes);
             default:
-                serializator = new ObjectSerializator();
+                return new ObjectSerializator().build(bytes);
         }
-        return (T) serializator.build(bytes);
     }
 
-//    public T build(byte[] bytes) {
-//        return build(bytes, 0);
-//    }
-
-    public T build(byte[] bytes, int off) {
-        return null;
-    }
-
-//    public byte[] debuild(T name){
-//        return getBytes(name);
-//    }
 
     /**
      * Извлечение отдельных полей в виде массивов из главного массива
@@ -165,13 +139,12 @@ public class Serializator<T> {
      *
      * @return массив массивов полей
      */
-    public byte[][] split(byte[] bytes) {
+    public static byte[][] split(byte[] bytes) {
         if (codes.containsKey(bytes[0])) return new byte[][]{bytes};
         else {
             int classNameLen = getLength(bytes, 6);
             int startIndex = 6 + classNameLen;
             int amount = bytes[startIndex - 1];
-//        if (amount == 1) return new byte[][]{bytes};
             byte[][] res = new byte[amount][];
             for (int i = 0; i < amount; i++) {
                 Integer len;
@@ -205,13 +178,11 @@ public class Serializator<T> {
      *
      * @return
      */
-    public byte[] pack(Class clazz, byte[][] bytes) {
+    public static byte[] pack(Class clazz, byte[][] bytes) {
         if (!containsCode(clazz)) {                   // не примитивный класс
             String className = clazz.getName();
-            Serializator serializator = new StringSerializator();
+            StringSerializator serializator = new StringSerializator();
             byte[] classNameB = serializator.debuild(className);
-//            byte[] classNameB = getBytes(className);
-
             int length = 1 + 4 + 1 + classNameB.length;
             for (int i = 0; i < bytes.length; i++) {
                 length += bytes[i].length;
@@ -241,7 +212,7 @@ public class Serializator<T> {
      *
      * @return byte[4]
      */
-    public byte[] setLength(int k) {
+    public static byte[] setLength(int k) {
         byte[] res = new byte[4];
         res[0] = (byte) (k);
         res[1] = (byte) (k >> 8);

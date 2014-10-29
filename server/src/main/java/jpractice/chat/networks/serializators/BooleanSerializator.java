@@ -10,33 +10,27 @@ import java.util.Arrays;
  * xx ... xx - массив значения поля, может содержать свои поля.
  * @author Alexander Vlasov
  */
-public class BooleanSerializator extends Serializator<Boolean> {
+public class BooleanSerializator {
 
     public static void main(String[] args) {
-        Serializator serializator = new BooleanSerializator();
+        Serializator serializator = new Serializator();
         byte[] bytes = serializator.debuild(false);
         System.out.println(Arrays.toString(bytes));
         System.out.println(serializator.build(bytes));
     }
 
-    public static int getLength(byte[] bytes) {
-        return 2;
-    }
-
-    @Override
-    public byte[] debuild(Boolean l) {
+    public byte[] debuild(Object l) {
         byte[] res = new byte[2];
-        res[0] = BOOLEAN;
-        res[1] = (byte) (l ? 1 : 0);
+        res[0] = Serializator.BOOLEAN;
+        res[1] = (byte) ((Boolean) l ? 1 : 0);
         return res;
     }
 
-    @Override
-    public Boolean build(byte[] bytes) {
+    public Object build(byte[] bytes) {
         return build(bytes, 0);
     }
-    @Override
-    public Boolean build(byte[] bytes, int off) {
+
+    public Object build(byte[] bytes, int off) {
         return bytes[off + 1] == 1;
     }
 }

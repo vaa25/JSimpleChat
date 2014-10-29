@@ -1,9 +1,6 @@
 package jpractice.chat.networks;
 
-import jpractice.chat.networks.serializators.BooleanSerializator;
-import jpractice.chat.networks.serializators.IntegerSerializator;
 import jpractice.chat.networks.serializators.Serializator;
-import jpractice.chat.networks.serializators.StringSerializator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,13 +27,13 @@ public class MyObjectInputStream implements Runnable {
         Serializator serializator = null;
         switch (type) {
             case Serializator.BOOLEAN:
-                serializator = new BooleanSerializator();
+//                serializator = new BooleanSerializator();
                 break;
             case Serializator.STRING:
-                serializator = new StringSerializator();
+//                serializator = new StringSerializator();
                 break;
             case Serializator.INTEGER:
-                serializator = new IntegerSerializator();
+//                serializator = new IntegerSerializator();
                 break;
         }
         Object res = serializator.build(next());

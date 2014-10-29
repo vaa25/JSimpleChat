@@ -9,40 +9,37 @@ import java.util.Arrays;
 /**
  * @author Alexander Vlasov
  */
-public class StringSerializator extends Serializator<String> {
+public class StringSerializator {
     public static void main(String[] args) {
-        Serializator<String> serializator = new Serializator();
+        Serializator serializator = new Serializator();
         byte[] bytes = serializator.debuild("Саша the best");
-//        bytes[0]=9;
         System.out.println(Arrays.toString(bytes));
-//        System.out.println(serializator.build(bytes));
         System.out.println(serializator.build(bytes));
     }
 
-    @Override
-    public byte[] debuild(String value) {
+    public byte[] debuild(Object value) {
         byte[] stringB = null;
         try {
-            stringB = value.getBytes("UTF-8");
+            stringB = ((String) value).getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-//        byte[] stringB = Charset.forName("UTF-8").encode(value).array();
         byte[] res = new byte[5 + stringB.length];
-        byte[] len = setLength(res.length);
-        res[0] = STRING;
+        byte[] len = Serializator.setLength(res.length);
+        res[0] = Serializator.STRING;
         System.arraycopy(len, 0, res, 1, 4);
         System.arraycopy(stringB, 0, res, 5, stringB.length);
         return res;
 
     }
-    @Override
-    public String build(byte[] bytes) {
+
+    public Object build(byte[] bytes) {
         return build(bytes, 0);
     }
-    public String build(byte[] bytes, int off) {
+
+    public Object build(byte[] bytes, int off) {
         int start = off + 5;
-        int len = getLength(bytes, off + 1) - 5;
+        int len = Serializator.getLength(bytes, off + 1) - 5;
         String res = Charset.forName("UTF-8").decode(ByteBuffer.wrap(bytes, start, len)).toString();
         return res;
     }

@@ -10,8 +10,7 @@ import java.util.Arrays;
 public class Tester {
     public static void main(String[] args) {
         test(new Serializator(), new Person("Alex"));
-        test(new PersonSerializator(), new Person("Alex"));
-        test(new ObjectSerializator(), new Person("Alex"));
+//        test(new ObjectSerializator(), new Person("Alex"));
 
     }
 
