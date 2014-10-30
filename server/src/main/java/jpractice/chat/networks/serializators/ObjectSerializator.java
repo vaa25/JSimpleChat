@@ -7,9 +7,9 @@ import java.util.Arrays;
 
 /**
  * Сериализатор для объектов
- *
+ * <p>
  * Структура итогового массива байтов byte[]bytes:
- *
+ * <p>
  * xx xx xx xx - длина итогового массива (int), извлекается  getLength(byte[] bytes)
  * xx - длина имени класса (byte)
  * xx ... xx - массив имени класса (String)
@@ -20,12 +20,14 @@ import java.util.Arrays;
  * xx - длина имени класса поля (byte)
  * xx ... xx - массив имени класса поля
  * xx ... xx - массив значения поля, может содержать свои поля.
- *
- *  *длина имени класса (поля) включает в себя себя и остальные данные, принадлежащие классу (полю)
+ * <p>
+ * *длина имени класса (поля) включает в себя себя и остальные данные, принадлежащие классу (полю)
  *
  * @author Alexander Vlasov
  */
-public class ObjectSerializator {
+public class ObjectSerializator implements SerializatorInterface {
+
+
     public static void main(String[] args) {
         test(new Serializator(), new Person("Alex"));
 
@@ -43,6 +45,7 @@ public class ObjectSerializator {
     public Object build(byte[] bytes) {
         return build(bytes, 0);
     }
+
     public Object build(byte[] bytes, int off) {
         if (bytes[off] == Serializator.CLASS) {
             StringSerializator serializator = new StringSerializator();
@@ -85,11 +88,11 @@ public class ObjectSerializator {
             field.setAccessible(true);
             try {
                 Object value = field.get(object);
-                if (Serializator.containsCode(value.getClass())) {
-                    bytes[i] = Serializator.debuild(value);
-                } else {
-                    bytes[i] = debuild(value);
-                }
+//                if (Serializator.containsCode(value.getClass())) {
+                bytes[i] = Serializator.debuild(value);
+//                } else {
+//                    bytes[i] = debuild(value);
+//                }
 
             } catch (IllegalAccessException e) {
                 e.printStackTrace();

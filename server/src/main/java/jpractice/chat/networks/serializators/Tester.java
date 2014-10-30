@@ -1,7 +1,5 @@
 package jpractice.chat.networks.serializators;
 
-import jpractice.chat.Person;
-
 import java.util.Arrays;
 
 /**
@@ -9,7 +7,7 @@ import java.util.Arrays;
  */
 public class Tester {
     public static void main(String[] args) {
-        test(new Serializator(), new Person("Alex"));
+        test(new Serializator(), new TestObject());
 //        test(new ObjectSerializator(), new Person("Alex"));
 
     }

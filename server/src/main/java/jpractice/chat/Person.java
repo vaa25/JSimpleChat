@@ -13,7 +13,9 @@ public class Person implements Serializable {
     private boolean online;
 
     public Person() {
+        this("Alex");
     }
+
     public Person(String name) {
         this.name = name;
         online = true;
@@ -39,4 +41,11 @@ public class Person implements Serializable {
         return new Text(name);
     }
 
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", online=" + online +
+                '}';
+    }
 }

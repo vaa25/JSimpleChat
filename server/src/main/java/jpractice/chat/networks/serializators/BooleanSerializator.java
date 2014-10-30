@@ -8,9 +8,10 @@ import java.util.Arrays;
  * xx - длина имени класса поля (byte)
  * xx ... xx - массив имени класса поля
  * xx ... xx - массив значения поля, может содержать свои поля.
+ *
  * @author Alexander Vlasov
  */
-public class BooleanSerializator {
+public class BooleanSerializator implements SerializatorInterface {
 
     public static void main(String[] args) {
         Serializator serializator = new Serializator();

@@ -9,7 +9,8 @@ import java.util.Arrays;
 /**
  * @author Alexander Vlasov
  */
-public class StringSerializator {
+public class StringSerializator implements SerializatorInterface {
+
     public static void main(String[] args) {
         Serializator serializator = new Serializator();
         byte[] bytes = serializator.debuild("Саша the best");

@@ -1,5 +1,7 @@
 package jpractice.chat.networks.serializators;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,23 +9,21 @@ import java.util.Map;
  * Сериализация - разложение объектов на байты.
  *
  * Структура итогового массива байтов byte[]bytes:
- * xx - код примитивного класса или маркер непримитивного
- * xx xx xx xx - длина итогового массива (int), извлекается  getLength(byte[] bytes)
- * xx - длина имени класса (byte)
+ * xx - код примитивного класса (0 ... 126) или маркер непримитивного (127)
+ * xx xx xx xx - длина итогового массива (int), извлекается getLength(byte[] bytes)
  * xx ... xx - массив имени класса (String)
  * xx - количество полей (byte)
  * xx ... xx - поля
- * поля:
- * xx - определенный примитивный класс или нет
- * xx xx xx xx - длина массива поля, извлекается  getLength(byte[] bytes)
- * xx - длина имени класса поля (byte)
- * xx ... xx - массив имени класса поля
- * xx ... xx - массив значения поля, может содержать свои поля.
  *
- * для примитивных
- * xx - код примитивного класса
- * xx ... xx - данные фиксированной для каждого примитивного класса длины
- *  *длина имени класса (поля) включает в себя себя и остальные данные, принадлежащие классу (полю)
+ * непримитивные поля и классы: рассматриваются как классы внутри класса
+ * xx - 127
+ * xx xx xx xx - длина массива поля, извлекается  getLength(byte[] bytes)
+ * xx ... xx - массив имени класса поля
+ * xx ... xx - массив значения объекта поля, может содержать свои поля.
+ *
+ * примитивные поля и классы: рассматриваются как примитивные классы внутри класса
+ * xx - код определенного примитивного класса
+ * xx ... xx - данные фиксированной для каждого примитивного класса длины (кроме String)
  *
  * @author Alexander Vlasov
  */
@@ -32,20 +32,80 @@ public class Serializator {
     public static final byte INTEGER = 9;
     public static final byte BOOLEAN = 8;
     public static final byte CLASS = 127;
+    public static final byte SHORT = 7;
+    public static final byte BYTE = 6;
+    public static final byte LONG = 5;
+    public static final byte FLOAT = 4;
+    public static final byte DOUBLE = 3;
+    public static final byte BIGINTEGER = 2;
+    public static final byte BIGDECIMAL = 1;
 
 
     private static Map<Class, Byte> codes = new HashMap<>();
-    private static Map<Byte, Integer> lengths = new HashMap<Byte, Integer>();
-
+    private static Map<Byte, Integer> lengths = new HashMap<>();
     static {
         codes.put(Boolean.class, BOOLEAN);
         codes.put(boolean.class, BOOLEAN);
         codes.put(Integer.class, INTEGER);
         codes.put(int.class, INTEGER);
+        codes.put(Double.class, DOUBLE);
+        codes.put(double.class, DOUBLE);
+        codes.put(Short.class, SHORT);
+        codes.put(short.class, SHORT);
+        codes.put(Byte.class, BYTE);
+        codes.put(byte.class, BYTE);
+        codes.put(Long.class, LONG);
+        codes.put(long.class, LONG);
+        codes.put(Float.class, FLOAT);
+        codes.put(float.class, FLOAT);
         codes.put(String.class, STRING);
+        codes.put(BigInteger.class, BIGINTEGER);
+        codes.put(BigDecimal.class, BIGDECIMAL);
 
         lengths.put(BOOLEAN, 2);
         lengths.put(INTEGER, 5);
+        lengths.put(FLOAT, 5);
+        lengths.put(SHORT, 3);
+        lengths.put(BYTE, 2);
+        lengths.put(LONG, 9);
+        lengths.put(DOUBLE, 9);
+
+    }
+
+    private static SerializatorInterface selectSerializator(byte code) {
+        switch (code) {
+            case BOOLEAN:
+                return new BooleanSerializator();
+            case INTEGER:
+                return new IntegerSerializator();
+            case DOUBLE:
+                return new DoubleSerializator();
+            case STRING:
+                return new StringSerializator();
+            case SHORT:
+                return new ShortSerializator();
+            case BYTE:
+                return new ByteSerializator();
+            case LONG:
+                return new LongSerializator();
+            case FLOAT:
+                return new FloatSerializator();
+            case BIGINTEGER:
+                return new BigIntegerSerializator();
+            case BIGDECIMAL:
+                return new BigDecimalSerializator();
+            default:
+                return new ObjectSerializator();
+        }
+    }
+
+    public static byte[] debuild(Object object) {
+        return selectSerializator(getCode(object.getClass())).debuild(object);
+    }
+
+    public static Object build(byte[] bytes) {
+        return selectSerializator(bytes[0]).build(bytes);
+
     }
 
     public static byte getCode(Class clazz) {
@@ -78,39 +138,13 @@ public class Serializator {
      *
      * @return длина
      */
-    protected static int getLength(byte[] bytes, int off) {
+    static int getLength(byte[] bytes, int off) {
         byte[] lengthB = new byte[4];
         System.arraycopy(bytes, off, lengthB, 0, 4);
         return (Byte.toUnsignedInt(lengthB[3]) << 24) +
                 (Byte.toUnsignedInt(lengthB[2]) << 16) +
                 (Byte.toUnsignedInt(lengthB[1]) << 8) +
                 Byte.toUnsignedInt(lengthB[0]);
-    }
-
-    public static byte[] debuild(Object object) {
-        switch (getCode(object.getClass())) {
-            case BOOLEAN:
-                return new BooleanSerializator().debuild(object);
-            case INTEGER:
-                return new IntegerSerializator().debuild(object);
-            case STRING:
-                return new StringSerializator().debuild(object);
-            default:
-                return new ObjectSerializator().debuild(object);
-        }
-    }
-
-    public static Object build(byte[] bytes) {
-        switch (bytes[0]) {
-            case BOOLEAN:
-                return new BooleanSerializator().build(bytes);
-            case INTEGER:
-                return new IntegerSerializator().build(bytes);
-            case STRING:
-                return new StringSerializator().build(bytes);
-            default:
-                return new ObjectSerializator().build(bytes);
-        }
     }
 
 
