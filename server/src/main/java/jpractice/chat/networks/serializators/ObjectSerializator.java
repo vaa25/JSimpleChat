@@ -3,6 +3,7 @@ package jpractice.chat.networks.serializators;
 import jpractice.chat.Person;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
 /**
@@ -56,12 +57,13 @@ public class ObjectSerializator implements SerializatorInterface {
                 Object object = (clazz.newInstance());
                 Field[] fields = clazz.getDeclaredFields();
                 byte[][] splitted = Serializator.split(bytes);
-
+                int j = 0;
                 for (int i = 0; i < fields.length; i++) {
 
                     Field field = fields[i];
+                    if ((field.getModifiers() & Modifier.TRANSIENT) == Modifier.TRANSIENT) continue;
                     field.setAccessible(true);
-                    Object value = Serializator.build(splitted[i]);
+                    Object value = Serializator.build(splitted[j++]);
                     field.set(object, value);
                 }
                 return object;
@@ -81,19 +83,22 @@ public class ObjectSerializator implements SerializatorInterface {
     public byte[] debuild(Object object) {
         Class clazz = object.getClass();
 
-        Field[] fields = clazz.getDeclaredFields();
-        byte[][] bytes = new byte[fields.length][];
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
+        Field[] declaredFields = clazz.getDeclaredFields();
+        int fieldsToTransit = 0;
+        int end = declaredFields.length;
+        for (int i = 0; i < end; i++) {
+            int modifiers = declaredFields[i].getModifiers();
+            if ((modifiers & Modifier.TRANSIENT) != Modifier.TRANSIENT) fieldsToTransit++;
+        }
+        byte[][] bytes = new byte[fieldsToTransit][];
+        int j = 0;
+        for (int i = 0; i < declaredFields.length; i++) {
+            Field field = declaredFields[i];
+            if ((declaredFields[i].getModifiers() & Modifier.TRANSIENT) == Modifier.TRANSIENT) continue;
             field.setAccessible(true);
             try {
                 Object value = field.get(object);
-//                if (Serializator.containsCode(value.getClass())) {
-                bytes[i] = Serializator.debuild(value);
-//                } else {
-//                    bytes[i] = debuild(value);
-//                }
-
+                bytes[j++] = Serializator.debuild(value);
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }

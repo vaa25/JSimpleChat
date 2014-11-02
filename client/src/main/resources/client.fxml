@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.paint.*?>
-<?import javafx.scene.text.*?>
-
-<VBox xmlns:fx="http://javafx.com/fxml/1" prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/2.2"
+<VBox xmlns:fx="http://javafx.com/fxml/1" prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8"
       fx:controller="jpractice.chat.Controller">
     <children>
         <MenuBar VBox.vgrow="NEVER">
@@ -49,20 +44,25 @@
                 </Menu>
             </menus>
         </MenuBar>
-        <BorderPane prefHeight="200.0" prefWidth="200.0">
+        <BorderPane VBox.vgrow="ALWAYS">
             <bottom>
                 <TextField fx:id="editText" onAction="#textEntered" prefWidth="640.0000999999975"/>
             </bottom>
             <center>
-                <ScrollPane prefHeight="200.0" prefWidth="200.0">
+                <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" pannable="true">
                     <content>
-                        <TextArea fx:id="commonArea" editable="false" focusTraversable="false" prefWidth="200.0"
-                                  wrapText="true"/>
+                        <TextArea fx:id="commonArea" editable="false" focusTraversable="false" wrapText="true"/>
                     </content>
                 </ScrollPane>
             </center>
             <right>
-                <VBox fx:id="personVBox" prefHeight="200.0" prefWidth="100.0"/>
+                <ScrollPane fitToHeight="true" fitToWidth="true" pannable="true" prefViewportHeight="350.0"
+                            prefViewportWidth="182.0">
+                    <content>
+                        <VBox fx:id="personVBox" prefHeight="175.0" prefWidth="182.0"
+                              BorderPane.alignment="CENTER_RIGHT"/>
+                    </content>
+                </ScrollPane>
             </right>
         </BorderPane>
     </children>

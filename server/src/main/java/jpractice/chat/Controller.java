@@ -18,15 +18,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class Controller implements Initializable, NewPersonListener {
     final int serverPort = 20000;
     private ConcurrentHashMap<OutputStream, Person> oosPersonMap;
-    private ObjectParser parser;
     private ObjectHandler objectHandler;
     private boolean connected;
     private Network network;
@@ -48,48 +46,60 @@ public class Controller implements Initializable, NewPersonListener {
 
     private void connectionEstablished() {
         connected = true;
-        network.getParser().registerEmergency(String.class);
-        network.getParser().registerEmergency(Special.class);
-        network.getParser().registerEmergency(Person.class);
-        BlockingQueue queue = new LinkedBlockingQueue();
-        network.getParser().setEmergency(queue);
-        setObjectHandler(queue);
+
     }
 
     private void sendToAll(Object object) {
         Collection<Person> toRemove = network.sendToAll(object);
         for (Person person : toRemove) {
-            person.setOnline(false);
             System.out.println(person.getName() + " disconnected");
+            personVBox.getChildren().removeAll(person.getVisual());
         }
-        personVBox.getChildren().removeAll(toRemove);
     }
 
-    private void setObjectHandler(BlockingQueue queue) {
+    private void setObjectHandler(ConcurrentHashMap<MyObjectInputStream, Object> queue) {
         objectHandler = new ObjectHandler(queue);
         objectHandler.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
             @Override
             public void handle(WorkerStateEvent workerStateEvent) {
-                Object object = workerStateEvent.getSource().getValue();
+                Map.Entry<MyObjectInputStream, Object> entry = (Map.Entry) workerStateEvent.getSource().getValue();
+                Object value = entry.getValue();
+                MyObjectInputStream in = entry.getKey();
+                if (value.getClass().equals(Person.class)) {
+                    Person person = (Person) value;
+                    network.getPersons().put(in, person);
+                    network.sendToAll(person);
+                    if (person.isOnline()) personVBox.getChildren().addAll(person.getVisual());
+                    else personVBox.getChildren().removeAll(person.getVisual());
+                } else if (value.getClass().equals(String.class)) {
+                    Person person = network.getPersons().get(in);
+                    String text;
+                    if (person == null) text = "Unknown: ";
+                    else text = person.getName() + ": " + value;
+                    commonArea.appendText(text + "\n");
+                    sendToAll(text);
+                } else if (value.equals(Special.LostConnection)) {
+                    commonArea.appendText("Потеряно соединение с " + network.getPersons().get(in).getName() + "\n");
+                    removePerson(in);
 
-                if (object.getClass().equals(String.class)) {
-                    commonArea.appendText((String) object);
-                    sendToAll(object);
-                }
-
-                if (object.equals(Special.NotReady)) {
-                }
+                } else System.out.println("Неизвестное значение: " + value);
                 objectHandler.restart();
             }
         });
         objectHandler.start();
     }
 
+    private void removePerson(MyObjectInputStream in) {
+        personVBox.getChildren().removeAll(network.getPersons().get(in).getVisual());
+        network.remove(in);
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            oosPersonMap = new ConcurrentHashMap<>();
-            network = new Network(oosPersonMap, serverPort, this);
+            ConcurrentHashMap<MyObjectInputStream, Object> received = new ConcurrentHashMap<>();
+            network = new Network(serverPort, received);
+            setObjectHandler(received);
             connectionEstablished();
 
         } catch (IOException e) {

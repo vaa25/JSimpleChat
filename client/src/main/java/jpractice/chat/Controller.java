@@ -16,27 +16,25 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import jpractice.chat.networks.*;
 
-import java.io.*;
+import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.ResourceBundle;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Controller implements Initializable {
     final int serverPort = 20000;
     private List<Person> personList;
-    private Person me = new Person("Alex");
+    private Person me;
     private ObjectSender sender;
     private ObjectParser parser;
     private ObjectHandler objectHandler;
     private Socket socket;
     private boolean connected;
     private Network network;
+    private ConcurrentHashMap<MyObjectInputStream, Object> received;
     @FXML
     private TextArea commonArea;
     @FXML
@@ -46,7 +44,7 @@ public class Controller implements Initializable {
 
     @FXML
     void textEntered(ActionEvent event) {
-        sender.sendObject(me.getName() + ": " + editText.getText() + "\n");
+        network.send(editText.getText() + "\n");
         editText.clear();
     }
 
@@ -58,13 +56,6 @@ public class Controller implements Initializable {
 
     private void connectionEstablished() {
         connected = true;
-        network.getParser().registerEmergency(String.class);
-        network.getParser().registerEmergency(Special.class);
-        network.getParser().registerEmergency(Person.class);
-        BlockingQueue queue = new LinkedBlockingQueue();
-        network.getParser().setEmergency(queue);
-        setObjectHandler(queue);
-        sender = network.getSender();
         System.out.println(" Connection established");
     }
 
@@ -85,26 +76,36 @@ public class Controller implements Initializable {
         personVBox.getChildren().addAll(person.getVisual());
     }
 
-    private void setObjectHandler(BlockingQueue queue) {
 
+    private void setObjectHandler(ConcurrentHashMap<MyObjectInputStream, Object> queue) {
         objectHandler = new ObjectHandler(queue);
         objectHandler.setOnSucceeded(new EventHandler<WorkerStateEvent>() {
             @Override
             public void handle(WorkerStateEvent workerStateEvent) {
-                Object object = workerStateEvent.getSource().getValue();
-
-                if (object.getClass().equals(String.class)) {
-                    commonArea.appendText((String) object);
-                }
-                if (object.equals(Person.class)) {
-                    Person person = (Person) object;
+                Map.Entry<MyObjectInputStream, Object> entry = (Map.Entry) workerStateEvent.getSource().getValue();
+                Object value = entry.getValue();
+                MyObjectInputStream in = entry.getKey();
+                if (value.getClass().equals(Person.class)) {
+                    Person person = (Person) value;
                     if (person.isOnline()) {
-                        addPerson(person);
+                        personVBox.getChildren().addAll(person.getVisual());
+                        network.getPersons().put(in, person);
                     } else {
-                        removePerson(person);
+                        personVBox.getChildren().removeAll(person.getVisual());
+                        network.getPersons().remove(in);
                     }
-                }
-                if (object.equals(Special.NotReady)) {
+                } else if (value.getClass().equals(String.class)) {
+                    Person person = network.getPersons().get(in);
+                    String text;
+                    if (person == null) text = "Unknown: ";
+                    else text = person.getName() + ": " + value;
+                    commonArea.appendText(text + "\n");
+                } else if (value.equals(Special.LostConnection)) {
+                    System.out.println("Lost connection");
+                    commonArea.clear();
+                    personVBox.getChildren().clear();    // возможен первый элемент == Group не нужно удалять
+                    commonArea.appendText("Потеряно соединение с сервером\n");
+                    while (!connectToServer()) ;
                 }
                 objectHandler.restart();
             }
@@ -112,19 +113,37 @@ public class Controller implements Initializable {
         objectHandler.start();
     }
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    private boolean connectToServer() {
         try {
-            setMe();
+            received = new ConcurrentHashMap<>();
             socket = new Socket(InetAddress.getLocalHost(), serverPort);
+            commonArea.appendText("Соединение с сервером установлено\n");
             System.out.println(socket);
-            network = new Network(socket);
+            network = new Network(socket, received);
+            setObjectHandler(received);
             connectionEstablished();
-            sender.sendObject(me);
             personList = new ArrayList<>();
+            network.send(me);
+        } catch (ConnectException e) {
+            if ("Connection refused: connect".equals(e.getMessage())) {
+                return false;
+
+            }
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
 
+        }
+        return true;
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        setMe();
+        if (!connectToServer()) {
+            commonArea.appendText("Сервер не обнаружен");
+            System.out.println("No server available");
+            System.exit(0);
         }
 
     }

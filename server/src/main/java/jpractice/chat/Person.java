@@ -3,14 +3,13 @@ package jpractice.chat;
 import javafx.scene.Node;
 import javafx.scene.text.Text;
 
-import java.io.Serializable;
-
 /**
  * @author Alexander Vlasov
  */
-public class Person implements Serializable {
+public class Person {
     private String name;
     private boolean online;
+    private transient Text image;
 
     public Person() {
         this("Alex");
@@ -19,6 +18,7 @@ public class Person implements Serializable {
     public Person(String name) {
         this.name = name;
         online = true;
+//        image=new Text(name);
     }
 
     public boolean isOnline() {
@@ -38,7 +38,10 @@ public class Person implements Serializable {
     }
 
     public Node getVisual() {
-        return new Text(name);
+        if (image == null) {
+            image = new Text(name);
+        }
+        return image;
     }
 
     @Override

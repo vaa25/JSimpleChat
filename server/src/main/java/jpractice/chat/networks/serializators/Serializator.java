@@ -2,8 +2,7 @@ package jpractice.chat.networks.serializators;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Сериализация - разложение объектов на байты.
@@ -39,6 +38,8 @@ public class Serializator {
     public static final byte DOUBLE = 3;
     public static final byte BIGINTEGER = 2;
     public static final byte BIGDECIMAL = 1;
+    public static final byte ARRAY = 11;
+    public static final byte COLLECTION = 12;
 
 
     private static Map<Class, Byte> codes = new HashMap<>();
@@ -61,6 +62,14 @@ public class Serializator {
         codes.put(String.class, STRING);
         codes.put(BigInteger.class, BIGINTEGER);
         codes.put(BigDecimal.class, BIGDECIMAL);
+        codes.put(Collection.class, COLLECTION);
+        codes.put(List.class, COLLECTION);
+        codes.put(ArrayList.class, COLLECTION);
+        codes.put(LinkedList.class, COLLECTION);
+        codes.put(Set.class, COLLECTION);
+        codes.put(HashSet.class, COLLECTION);
+        codes.put(SortedSet.class, COLLECTION);
+        codes.put(TreeSet.class, COLLECTION);
 
         lengths.put(BOOLEAN, 2);
         lengths.put(INTEGER, 5);
@@ -94,13 +103,24 @@ public class Serializator {
                 return new BigIntegerSerializator();
             case BIGDECIMAL:
                 return new BigDecimalSerializator();
+            case ARRAY:
+                return new ArraySerializator();
+            case COLLECTION:
+                return new CollectionSerializator();
             default:
                 return new ObjectSerializator();
         }
     }
 
     public static byte[] debuild(Object object) {
-        return selectSerializator(getCode(object.getClass())).debuild(object);
+        Class clazz = object.getClass();
+        byte code;
+        if (clazz.isArray()) {
+            code = ARRAY;
+        } else {
+            code = getCode(clazz);
+        }
+        return selectSerializator(code).debuild(object);
     }
 
     public static Object build(byte[] bytes) {
@@ -114,7 +134,11 @@ public class Serializator {
     }
 
     public static boolean containsCode(Class clazz) {
-        return codes.containsKey(clazz);
+        if (clazz.isArray()) {
+            return true;
+        } else {
+            return codes.containsKey(clazz);
+        }
     }
 
     /**
@@ -125,11 +149,16 @@ public class Serializator {
      * @return длина
      */
 
-    public static synchronized int getLength(byte[] bytes) {
+    public static int getLength(byte[] bytes) {
         return getLength(bytes, 0);
 
     }
 
+    public static int getLength(byte code) {
+        if (lengths.containsKey(code)) return lengths.get(code);
+        return -1;
+
+    }
     /**
      * Длина в массиве указанная в массиве со смещением
      *
@@ -178,8 +207,8 @@ public class Serializator {
     }
 
     public static byte[][] split(byte[] bytes, int off) {
-        if (codes.containsKey(bytes[off])) return new byte[][]{bytes};
-        else {
+//        if (codes.containsKey(bytes[off])) return new byte[][]{bytes};
+//        else {
             int classNameLen = getLength(bytes, off + 6);
             int startIndex = off + 6 + classNameLen;
             int amount = bytes[startIndex - 1];
@@ -196,7 +225,7 @@ public class Serializator {
             }
             return res;
 
-        }
+//        }
     }
 
     /**
@@ -217,7 +246,7 @@ public class Serializator {
      * @return
      */
     public static byte[] pack(Class clazz, byte[][] bytes) {
-        if (!containsCode(clazz)) {                   // не примитивный класс
+//        if (!containsCode(clazz)) {                   // не примитивный класс
             String className = clazz.getName();
             StringSerializator serializator = new StringSerializator();
             byte[] classNameB = serializator.debuild(className);
@@ -238,9 +267,9 @@ public class Serializator {
             }
             return res;
 
-        } else {
-            return bytes[0];
-        }
+//        } else {
+//            return bytes[0];
+//        }
     }
 
     /**

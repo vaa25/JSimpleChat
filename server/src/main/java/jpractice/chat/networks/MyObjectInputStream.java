@@ -4,6 +4,8 @@ import jpractice.chat.networks.serializators.Serializator;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Alexander Vlasov
@@ -11,62 +13,70 @@ import java.io.InputStream;
 public class MyObjectInputStream implements Runnable {
     private InputStream in;
     private byte[] data;
-    private byte type;
     private volatile boolean transferComplete;
+    private boolean closed;
+    private ConcurrentHashMap map;
 
-    public MyObjectInputStream(InputStream in) {
+    public MyObjectInputStream(InputStream in, ConcurrentHashMap<MyObjectInputStream, Object> received) {
         this.in = in;
-
-    }
-
-    public boolean hasNext() {
-        return transferComplete;
-    }
-
-    public Object get() {
-        Serializator serializator = null;
-        switch (type) {
-            case Serializator.BOOLEAN:
-//                serializator = new BooleanSerializator();
-                break;
-            case Serializator.STRING:
-//                serializator = new StringSerializator();
-                break;
-            case Serializator.INTEGER:
-//                serializator = new IntegerSerializator();
-                break;
-        }
-        Object res = serializator.build(next());
-        return res;
-    }
-
-    private byte[] next() {
-
-        byte[] res = data;
-        transferComplete = false;
-        return res;
+        map = received;
     }
 
     @Override
     public void run() {
         transferComplete = false;
-        while (!transferComplete) {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            System.out.println("Interrupt connection");
             try {
-                byte[] header = new byte[6];
-                for (int i = 0; i < 6; i++) {
-                    int value = in.read();
-                    if (value == -1) return;
-                    header[i] = (byte) value;
+                in.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+        while (!transferComplete) {
+
+            try {
+                int value = in.read();
+                if (value == -1) {
+                    closed = true;
+                    continue;
                 }
-                int len = Serializator.getLength(header);
+                byte code = (byte) value;
+                int len = Serializator.getLength(code);
+                byte[] length = new byte[0];
+                if (len == -1) {
+                    length = new byte[4];
+                    for (int i = 0; i < 4; i++) {
+                        value = in.read();
+                        if (value == -1) {
+                            closed = true;
+                            continue;
+                        }
+                        length[i] = (byte) value;
+                    }
+                    len = Serializator.getLength(length);
+                }
                 data = new byte[len];
-                System.arraycopy(header, 0, data, 0, header.length);
-                for (int i = header.length; i < data.length; i++) {
-                    int value = in.read();
-                    if (value == -1) return;
+                data[0] = code;
+                System.arraycopy(length, 0, data, 1, length.length);
+                for (int i = 1 + length.length; i < len; i++) {
+                    value = in.read();
+                    if (value == -1) {
+                        closed = true;
+                        continue;
+                    }
                     data[i] = (byte) value;
                 }
-                transferComplete = true;
+                map.put(this, Serializator.build(data));
+            } catch (SocketException e) {
+                if ("Connection reset".equals(e.getMessage())) {
+                    System.out.println("Connection reset");
+                    closed = true;
+                    map.put(this, Special.LostConnection);
+                    break;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }

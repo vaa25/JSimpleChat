@@ -1,96 +1,50 @@
 package jpractice.chat.networks;
 
+import jpractice.chat.Person;
+import jpractice.chat.networks.serializators.Serializator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.InetAddress;
+import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Network {
-    public static final int NICKNAME = 1;
-    public static final int TEXT = 2;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private Socket conn;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
-    private ObjectSender sender;
-    private ObjectReceiver receiver;
-    private ObjectParser parser;
-    private Thread receiverThread;
-    private InetAddress host;
-    private int port;
-    private byte[] data;
-    private int type;
+    private OutputStream out;
+    private MyObjectInputStream in;
+    private ConcurrentHashMap<MyObjectInputStream, Person> persons;
+    private Socket socket;
 
-    public Network(Socket conn) throws IOException {
-
-
-        //        logger.info( "Пытаюсь создать исходящий поток");
-        out = new ObjectOutputStream(conn.getOutputStream());
+    public Network(Socket socket, ConcurrentHashMap<MyObjectInputStream, Object> received) throws IOException {
+        this.socket = socket;
+        out = socket.getOutputStream();
         System.out.println("1");
-//        logger.info( "Иcходящий поток успешно создан " + out);
-//        logger.info( "Пытаюсь создать входящий поток");
-        in = new ObjectInputStream(conn.getInputStream());
+        in = new MyObjectInputStream(socket.getInputStream(), received);
         System.out.println("2");
-//        logger.info( "Входящий поток успешно создан " + in);
-
-        sender = new ObjectSender(out);
-        System.out.println("3");
-        parser = new ObjectParser();
-        System.out.println("4");
-        receiver = new ObjectReceiver(in, parser);
-        System.out.println("5");
-        receiverThread = new Thread(receiver);
-        receiverThread.start();
-//        logger.info("network (" + Thread.currentThread().getName() + ") starts receiverThread (" + receiverThread.getName() + ")");
-
+        persons = new ConcurrentHashMap<>();
+        new Thread(in).start();
     }
 
-    public boolean hasData() throws IOException {
-        if (in.available() == 0) return false;
-        in.mark(2000);
-        int type = in.read();
-        int length = in.read();
-        byte[] data = new byte[length];
-        int len = in.read(data);
-        if (len < length) {
-            in.reset();
+    public ConcurrentHashMap<MyObjectInputStream, Person> getPersons() {
+        return persons;
+    }
+
+    public boolean send(Object object) {
+        byte[] bytes = Serializator.debuild(object);
+        System.out.println(Arrays.toString(bytes));
+        System.out.println(Serializator.build(bytes));
+        try {
+            out.write(bytes);
+            out.flush();
+        } catch (IOException e) {
+            System.out.println("Connection with server lost");
+            e.printStackTrace();
             return false;
         }
-        this.data = data;
-        this.type = type;
         return true;
-
-
-    }
-
-    public ObjectSender getSender() {
-        return sender;
-    }
-
-    public ObjectParser getParser() {
-        return parser;
-    }
-
-
-    public void close() {
-        try {
-            in.close();
-            out.close();
-            conn.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-//            logger.info("network (" + Thread.currentThread().getName() + ") try to join receiverThread (" + receiverThread.getName() + ")");
-            receiverThread.join();
-//            logger.info("network (" + Thread.currentThread().getName() + ") receiverThread (" + receiverThread.getName() + ") joined");
-        } catch (InterruptedException e) {
-            logger.error("Network (" + Thread.currentThread().getName() + ") receiverThread (" + receiverThread.getName() + ") join InterruptedException");
-        }
     }
 
 
