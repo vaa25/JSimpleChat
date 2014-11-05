@@ -71,6 +71,15 @@ public class Network {
         serverSocketHandler.start();
     }
 
+    public void send(MyObjectInputStream in, Object object) {
+        try {
+            OutputStream out = map2.get(in);
+            out.write(Serializator.debuild(object));
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public Collection<Person> sendToAll(Object object) {
         Collection<Person> closed = new ArrayList<>();
         byte[] bytes = Serializator.debuild(object);

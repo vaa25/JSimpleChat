@@ -5,6 +5,7 @@ import jpractice.chat.networks.serializators.Serializator;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -70,13 +71,11 @@ public class MyObjectInputStream implements Runnable {
                     data[i] = (byte) value;
                 }
                 map.put(this, Serializator.build(data));
-            } catch (SocketException e) {
-                if ("Connection reset".equals(e.getMessage())) {
-                    System.out.println("Connection reset");
-                    closed = true;
-                    map.put(this, Special.LostConnection);
-                    break;
-                }
+            } catch (SocketTimeoutException | SocketException e) {
+                System.out.println("Connection reset");
+                closed = true;
+                map.put(this, Special.LostConnection);
+                break;
             } catch (IOException e) {
                 e.printStackTrace();
             }
