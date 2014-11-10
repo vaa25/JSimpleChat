@@ -1,4 +1,5 @@
-package jpractice.chat;/**
+package jpractice.chat;
+/**
  *
  * @author Alexander Vlasov
  */
@@ -21,7 +22,7 @@ public class ServerGui extends Application {
     public void start(Stage stage) throws IOException {
         Parent root = FXMLLoader.load(ClassLoader.getSystemClassLoader().getResource("server.fxml"));
         Scene scene = new Scene(root);
-        stage.setTitle("Chat Server");
+        stage.setTitle("Сервер чата");
         stage.setScene(scene);
         stage.setOnCloseRequest(event -> System.exit(0));
         stage.show();

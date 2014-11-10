@@ -4,15 +4,22 @@ package jpractice.chat;
  * @author Alexander Vlasov
  */
 
+import javafx.application.Application;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 import jpractice.chat.networks.MyObjectInputStream;
 import jpractice.chat.networks.Network;
 import jpractice.chat.networks.ObjectHandler;
@@ -23,10 +30,17 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Controller implements Initializable {
+    public static String name;
+    @FXML
+    public static Stage STAGE;
     final int serverPort = 20000;
     private List<Person> personList;
     private Person me;
@@ -34,13 +48,15 @@ public class Controller implements Initializable {
     private Socket socket;
     private boolean connected;
     private Network network;
-    private ConcurrentHashMap<MyObjectInputStream, Object> received;
+    private ConcurrentHashMap<MyObjectInputStream, BlockingQueue> received;
     @FXML
     private TextArea commonArea;
     @FXML
     private VBox personVBox;
     @FXML
     private TextField editText;
+    @FXML
+    private Label nameLabel;
 
     @FXML
     void textEntered(ActionEvent event) {
@@ -48,10 +64,17 @@ public class Controller implements Initializable {
         editText.clear();
     }
 
+    @FXML
+    protected void handleYourButtonAction(ActionEvent event) {
+        STAGE.close();
+    }
     private void setMe() {
-        Random random = new Random();
-        int b = random.nextInt();
-        me = new Person("Client " + String.valueOf(b));
+//        Random random = new Random();
+//        int b = random.nextInt();
+//        me = new Person("Client " + String.valueOf(b));
+        nameLabel.setText(name);
+        me = new Person(name);
+
     }
 
     private void connectionEstablished() {
@@ -60,8 +83,23 @@ public class Controller implements Initializable {
     }
 
     private void removePerson(Person person) {
+        removeVisual(person.getVisual());
         personList.remove(person);
-        personVBox.getChildren().remove(person.getVisual());
+    }
+
+    private void removeVisual(Node visual) {
+        ObservableList<Node> observableList = personVBox.getChildren();
+        for (Node o : observableList) {
+            if (isSameVisual(o, visual)) {
+                visual = o;
+                break;
+            }
+        }
+        observableList.remove(visual);
+    }
+
+    private boolean isSameVisual(Node visual1, Node visual2) {
+        return ((Text) visual1).getText().equals(((Text) visual2).getText());
     }
 
     private void addPerson(Person person) {
@@ -72,7 +110,9 @@ public class Controller implements Initializable {
             editText.requestFocus();
             editText.selectEnd();
         });
-        if (me.getVisual().equals(visual)) visual.setFill(Color.RED);
+        if (me.getVisual().equals(visual)) {
+            visual.setFill(Color.RED);
+        }
         personVBox.getChildren().addAll(person.getVisual());
     }
 
@@ -89,28 +129,39 @@ public class Controller implements Initializable {
         newPersonList.forEach(this::addPerson);
     }
 
-    private void setObjectHandler(ConcurrentHashMap<MyObjectInputStream, Object> queue) {
-        objectHandler = new ObjectHandler(queue);
+    private void setObjectHandler(ConcurrentHashMap<MyObjectInputStream, BlockingQueue> map) {
+        objectHandler = new ObjectHandler(map);
         objectHandler.setOnSucceeded(workerStateEvent -> {
-            Map.Entry<MyObjectInputStream, Object> entry = (Map.Entry) workerStateEvent.getSource().getValue();
-            Object value = entry.getValue();
-            if (value.getClass().equals(Person.class)) {
-                Person person = (Person) value;
-                if (person.isOnline()) {
-                    addPerson(person);
-                } else {
-                    removePerson(person);
-                }
-            } else if (value.getClass().equals(ArrayList.class)) {
-                refreshPersonList((List) value);
+            Map.Entry<MyObjectInputStream, BlockingQueue> entry = (Map.Entry) workerStateEvent.getSource().getValue();
+            BlockingQueue queue = entry.getValue();
 
-            } else if (value.getClass().equals(String.class)) {
-                commonArea.appendText(value + "\n");
-            } else if (value.equals(Special.LostConnection)) {
-                System.out.println("Lost connection");
-                personVBox.getChildren().clear();    // возможен первый элемент == Group не нужно удалять
-                commonArea.appendText("Потеряно соединение с сервером\n");
-                while (!connectToServer()) ;
+            while (!queue.isEmpty()) {
+                Object value = null;
+                try {
+                    value = queue.take();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (value.getClass().equals(Person.class)) {
+                    Person person = (Person) value;
+//                    System.out.println(person);
+                    if (person.isOnline()) {
+                        addPerson(person);
+                    } else {
+                        removePerson(person);
+                    }
+                } else if (value.getClass().equals(ArrayList.class)) {
+                    refreshPersonList((List) value);
+
+                } else if (value.getClass().equals(String.class)) {
+                    commonArea.appendText(value + "\n");
+                } else if (value.equals(Special.LostConnection)) {
+                    System.out.println("Lost connection");
+                    personVBox.getChildren().clear();    // возможен первый элемент == Group не нужно удалять
+                    commonArea.appendText("Потеряно соединение с сервером\n");
+                    while (!connectToServer()) ;
+                }
+
             }
             objectHandler.restart();
         });
@@ -120,9 +171,10 @@ public class Controller implements Initializable {
     private boolean connectToServer() {
         try {
             received = new ConcurrentHashMap<>();
+
             socket = new Socket(InetAddress.getLocalHost(), serverPort);
             commonArea.appendText("Соединение с сервером установлено\n");
-            System.out.println(socket);
+//            System.out.println(socket);
             network = new Network(socket, received);
             setObjectHandler(received);
             connectionEstablished();
@@ -150,5 +202,20 @@ public class Controller implements Initializable {
             System.exit(0);
         }
 
+    }
+
+    class Authorize extends Application {
+
+        @Override
+        public void start(Stage stage) throws Exception {
+            Parent root = FXMLLoader.load(ClassLoader.getSystemClassLoader().getResource("authorization.fxml"));
+
+            Scene scene = new Scene(root);
+            stage.setTitle("Authorization");
+            stage.setScene(scene);
+
+            stage.setOnCloseRequest(event -> System.exit(0));
+            stage.show();
+        }
     }
 }

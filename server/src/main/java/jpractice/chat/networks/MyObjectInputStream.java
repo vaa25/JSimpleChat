@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * @author Alexander Vlasov
@@ -16,11 +18,12 @@ public class MyObjectInputStream implements Runnable {
     private byte[] data;
     private volatile boolean transferComplete;
     private boolean closed;
-    private ConcurrentHashMap map;
+    private ConcurrentHashMap<MyObjectInputStream, BlockingQueue> map;
 
-    public MyObjectInputStream(InputStream in, ConcurrentHashMap<MyObjectInputStream, Object> received) {
+    public MyObjectInputStream(InputStream in, ConcurrentHashMap<MyObjectInputStream, BlockingQueue> received) {
         this.in = in;
         map = received;
+        map.put(this, new LinkedBlockingQueue<>());
     }
 
     @Override
@@ -70,11 +73,14 @@ public class MyObjectInputStream implements Runnable {
                     }
                     data[i] = (byte) value;
                 }
-                map.put(this, Serializator.build(data));
+                Object received = Serializator.build(data);
+                map.get(this).add(received);
+//                map.put(this, received);
+//                System.out.println("Принял "+received);
             } catch (SocketTimeoutException | SocketException e) {
                 System.out.println("Connection reset");
                 closed = true;
-                map.put(this, Special.LostConnection);
+                map.get(this).add(Special.LostConnection);
                 break;
             } catch (IOException e) {
                 e.printStackTrace();

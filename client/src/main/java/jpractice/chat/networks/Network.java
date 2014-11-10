@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Network {
@@ -18,7 +19,7 @@ public class Network {
     private ConcurrentHashMap<MyObjectInputStream, Person> persons;
     private Socket socket;
 
-    public Network(Socket socket, ConcurrentHashMap<MyObjectInputStream, Object> received) throws IOException {
+    public Network(Socket socket, ConcurrentHashMap<MyObjectInputStream, BlockingQueue> received) throws IOException {
         this.socket = socket;
         out = socket.getOutputStream();
         System.out.println("1");

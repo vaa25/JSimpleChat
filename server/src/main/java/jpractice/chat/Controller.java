@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Controller implements Initializable, NewPersonListener {
@@ -25,6 +26,7 @@ public class Controller implements Initializable, NewPersonListener {
     private boolean connected;
     private Network network;
     private List<Person> personList;
+    private Buffer buffer;
 
     @FXML
     private TextArea commonArea;
@@ -35,9 +37,10 @@ public class Controller implements Initializable, NewPersonListener {
 
     @FXML
     void textEntered(ActionEvent event) {
-        String text = "Server: " + editText.getText() + "\n";
-        commonArea.appendText(text);
+        String text = "Server: " + editText.getText();
+        commonArea.appendText(text + "\n");
         sendToAll(text);
+        buffer.add(text);
         editText.clear();
     }
 
@@ -54,33 +57,43 @@ public class Controller implements Initializable, NewPersonListener {
         }
     }
 
-    private void setObjectHandler(ConcurrentHashMap<MyObjectInputStream, Object> queue) {
-        objectHandler = new ObjectHandler(queue);
+    private void setObjectHandler(ConcurrentHashMap<MyObjectInputStream, BlockingQueue> map) {
+        objectHandler = new ObjectHandler(map);
         objectHandler.setOnSucceeded(workerStateEvent -> {
-            Map.Entry<MyObjectInputStream, Object> entry = (Map.Entry) workerStateEvent.getSource().getValue();
-            Object value = entry.getValue();
-            MyObjectInputStream in = entry.getKey();
-            if (value.getClass().equals(Person.class)) {
-                Person person = (Person) value;
-                network.sendToAll(person);
-                if (person.isOnline()) {
-                    addPerson(in, person);
-                    network.send(in, personList);
-                } else {
-                    removePerson(in);
+            Map.Entry<MyObjectInputStream, BlockingQueue> entry = (Map.Entry) workerStateEvent.getSource().getValue();
+            BlockingQueue queue = entry.getValue();
+            while (!queue.isEmpty()) {
+                Object value = null;
+                try {
+                    value = queue.take();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            } else if (value.getClass().equals(String.class)) {
-                Person person = network.getPersons().get(in);
-                String text;
-                if (person == null) text = "Unknown: ";
-                else text = person.getName() + ": " + value;
-                commonArea.appendText(text + "\n");
-                sendToAll(text);
-            } else if (value.equals(Special.LostConnection)) {
-                commonArea.appendText("Потеряно соединение с " + network.getPersons().get(in).getName() + "\n");
-                removePerson(in);
+                MyObjectInputStream in = entry.getKey();
+                if (value.getClass().equals(Person.class)) {
+                    Person person = (Person) value;
+                    network.sendToAllExcept(in, person);
+                    if (person.isOnline()) {
+                        addPerson(in, person);
+                        if (buffer.size() > 0) network.send(in, buffer.get());
+                    } else {
+                        removePerson(in);
+                    }
+                } else if (value.getClass().equals(String.class)) {
+                    Person person = network.getPersons().get(in);
+                    String text;
+                    if (person == null) text = "Unknown: ";
+                    else text = person.getName() + ": " + value;
+                    commonArea.appendText(text + "\n");
+                    sendToAll(text);
+                    buffer.add(text);
+                } else if (value.equals(Special.LostConnection)) {
+                    commonArea.appendText("Потеряно соединение с " + network.getPersons().get(in).getName() + "\n");
+                    removePerson(in);
 
-            } else System.out.println("Неизвестное значение: " + value);
+                } else System.out.println("Неизвестное значение: " + value);
+
+            }
             objectHandler.restart();
         });
         objectHandler.start();
@@ -89,8 +102,8 @@ public class Controller implements Initializable, NewPersonListener {
     private void addPerson(MyObjectInputStream in, Person person) {
         network.getPersons().put(in, person);
         personVBox.getChildren().addAll(person.getVisual());
-        network.send(in, personList);
         personList.add(person);
+        network.send(in, personList);
     }
 
     private void removePerson(MyObjectInputStream in) {
@@ -105,11 +118,12 @@ public class Controller implements Initializable, NewPersonListener {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            ConcurrentHashMap<MyObjectInputStream, Object> received = new ConcurrentHashMap<>();
+            ConcurrentHashMap<MyObjectInputStream, BlockingQueue> received = new ConcurrentHashMap<>();
             network = new Network(serverPort, received);
             setObjectHandler(received);
             connectionEstablished();
             personList = new ArrayList<>();
+            buffer = new Buffer(10);
         } catch (IOException e) {
             e.printStackTrace();
         }

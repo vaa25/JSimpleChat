@@ -6,5 +6,5 @@ package jpractice.chat.networks;
  * @author Alexander Vlasov
  */
 public enum Special {
-    LostConnection, Ready, NotReady
+    LostConnection
 }

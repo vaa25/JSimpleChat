@@ -3,17 +3,19 @@ package jpractice.chat.networks;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Alexander Vlasov
  */
 public class ObjectHandler extends Service<Map.Entry> {
-    private ConcurrentHashMap map;
+    private ConcurrentHashMap<MyObjectInputStream, BlockingQueue> map;
 
-    public ObjectHandler(ConcurrentHashMap map) {
+    public ObjectHandler(ConcurrentHashMap<MyObjectInputStream, BlockingQueue> map) {
         this.map = map;
     }
 
@@ -22,14 +24,20 @@ public class ObjectHandler extends Service<Map.Entry> {
         return new Task() {
             @Override
             protected Object call() throws Exception {
-                while (map.isEmpty()) ;
-                Set<Map.Entry> set = map.entrySet();
-                Map.Entry res = set.iterator().next();
-                map.remove(res.getKey());
-                System.out.println("Принял " + res);
-                return res;
+                while (true) {
+                    Set<Map.Entry<MyObjectInputStream, BlockingQueue>> entries = map.entrySet();
+                    Iterator<Map.Entry<MyObjectInputStream, BlockingQueue>> iterator = entries.iterator();
+                    while (iterator.hasNext()) {
+                        Map.Entry<MyObjectInputStream, BlockingQueue> entry = iterator.next();
+                        BlockingQueue queue = entry.getValue();
+                        if (!queue.isEmpty()) {
+                            System.out.println("Принял " + entry.getValue());
+                            return entry;
+                        }
+                    }
+                }
             }
-        };
 
+        };
     }
 }

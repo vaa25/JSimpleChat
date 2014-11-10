@@ -112,7 +112,7 @@ public class Serializator {
         }
     }
 
-    public static byte[] debuild(Object object) {
+    public static synchronized byte[] debuild(Object object) {
         Class clazz = object.getClass();
         byte code;
         if (clazz.isArray()) {
@@ -123,7 +123,7 @@ public class Serializator {
         return selectSerializator(code).debuild(object);
     }
 
-    public static Object build(byte[] bytes) {
+    public static synchronized Object build(byte[] bytes) {
         return selectSerializator(bytes[0]).build(bytes);
 
     }

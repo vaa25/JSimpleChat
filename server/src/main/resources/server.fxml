@@ -64,5 +64,6 @@
                 </ScrollPane>
             </right>
         </BorderPane>
+        <Label id="name" fx:id="nameLabel" focusTraversable="false" visible="false"/>
     </children>
 </VBox>
