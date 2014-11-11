@@ -39,14 +39,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Controller implements Initializable {
     public static String name;
-    @FXML
-    public static Stage STAGE;
     final int serverPort = 20000;
     private List<Person> personList;
     private Person me;
     private ObjectHandler objectHandler;
     private Socket socket;
-    private boolean connected;
     private Network network;
     private ConcurrentHashMap<MyObjectInputStream, BlockingQueue> received;
     @FXML
@@ -64,22 +61,10 @@ public class Controller implements Initializable {
         editText.clear();
     }
 
-    @FXML
-    protected void handleYourButtonAction(ActionEvent event) {
-        STAGE.close();
-    }
     private void setMe() {
-//        Random random = new Random();
-//        int b = random.nextInt();
-//        me = new Person("Client " + String.valueOf(b));
         nameLabel.setText(name);
         me = new Person(name);
 
-    }
-
-    private void connectionEstablished() {
-        connected = true;
-        System.out.println(" Connection established");
     }
 
     private void removePerson(Person person) {
@@ -144,7 +129,6 @@ public class Controller implements Initializable {
                 }
                 if (value.getClass().equals(Person.class)) {
                     Person person = (Person) value;
-//                    System.out.println(person);
                     if (person.isOnline()) {
                         addPerson(person);
                     } else {
@@ -161,7 +145,6 @@ public class Controller implements Initializable {
                     commonArea.appendText("Потеряно соединение с сервером\n");
                     while (!connectToServer()) ;
                 }
-
             }
             objectHandler.restart();
         });
@@ -171,19 +154,15 @@ public class Controller implements Initializable {
     private boolean connectToServer() {
         try {
             received = new ConcurrentHashMap<>();
-
             socket = new Socket(InetAddress.getLocalHost(), serverPort);
             commonArea.appendText("Соединение с сервером установлено\n");
-//            System.out.println(socket);
             network = new Network(socket, received);
             setObjectHandler(received);
-            connectionEstablished();
             personList = new ArrayList<>();
             network.send(me);
         } catch (ConnectException e) {
             if ("Connection refused: connect".equals(e.getMessage())) {
                 return false;
-
             }
         } catch (IOException e) {
             e.printStackTrace();

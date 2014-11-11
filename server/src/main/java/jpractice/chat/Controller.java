@@ -10,7 +10,10 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
-import jpractice.chat.networks.*;
+import jpractice.chat.networks.MyObjectInputStream;
+import jpractice.chat.networks.Network;
+import jpractice.chat.networks.ObjectHandler;
+import jpractice.chat.networks.Special;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -19,11 +22,10 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Controller implements Initializable, NewPersonListener {
+public class Controller implements Initializable {
     final int serverPort = 20000;
     private ConcurrentHashMap<OutputStream, Person> oosPersonMap;
     private ObjectHandler objectHandler;
-    private boolean connected;
     private Network network;
     private List<Person> personList;
     private Buffer buffer;
@@ -42,11 +44,6 @@ public class Controller implements Initializable, NewPersonListener {
         sendToAll(text);
         buffer.add(text);
         editText.clear();
-    }
-
-    private void connectionEstablished() {
-        connected = true;
-
     }
 
     private void sendToAll(Object object) {
@@ -121,7 +118,6 @@ public class Controller implements Initializable, NewPersonListener {
             ConcurrentHashMap<MyObjectInputStream, BlockingQueue> received = new ConcurrentHashMap<>();
             network = new Network(serverPort, received);
             setObjectHandler(received);
-            connectionEstablished();
             personList = new ArrayList<>();
             buffer = new Buffer(10);
         } catch (IOException e) {
@@ -130,14 +126,5 @@ public class Controller implements Initializable, NewPersonListener {
 
     }
 
-    @Override
-    public void changePersonStatus(Person person) {
-        if (person.isOnline()) {
-            System.out.println(person.getName() + " connected");
-            personVBox.getChildren().addAll(person.getVisual());
-        } else {
-            System.out.println(person.getName() + " disconnected");
-            personVBox.getChildren().removeAll(person.getVisual());
-        }
-    }
+
 }
