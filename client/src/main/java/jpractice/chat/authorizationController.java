@@ -29,7 +29,6 @@ public class AuthorizationController {
     @FXML
     void nameEntered(ActionEvent event) {
         stage.close();
-//        System.out.println(((Node)(event.getSource())).getParent().getParent().getParent());
     }
 
 

@@ -16,7 +16,10 @@ import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Network {
+/**
+ *
+ */
+public class NetworkServer {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final int MAX_AMOUNT_OF_CLIENTS = 10;
     private int port;
@@ -25,7 +28,7 @@ public class Network {
     private ConcurrentHashMap<MyObjectInputStream, BlockingQueue> queues;
     private ServerSocketHandler serverSocketHandler;
 
-    public Network(int port, ConcurrentHashMap queues) throws IOException {
+    public NetworkServer(int port, ConcurrentHashMap queues) throws IOException {
         this.port = port;
         outStreams = new ConcurrentHashMap<>();
         launchServerSocketHandler();

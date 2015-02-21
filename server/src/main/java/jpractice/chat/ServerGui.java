@@ -25,6 +25,7 @@ public class ServerGui extends Application {
         stage.setTitle("Сервер чата");
         stage.setScene(scene);
         stage.setOnCloseRequest(event -> System.exit(0));
+        stage.setIconified(true);
         stage.show();
     }
 }

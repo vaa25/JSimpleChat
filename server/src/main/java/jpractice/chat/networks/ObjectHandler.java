@@ -35,6 +35,7 @@ public class ObjectHandler extends Service<Map.Entry> {
                             return entry;
                         }
                     }
+                    Thread.sleep(100);
                 }
             }
 

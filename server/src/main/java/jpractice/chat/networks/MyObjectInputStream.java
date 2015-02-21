@@ -29,17 +29,18 @@ public class MyObjectInputStream implements Runnable {
     @Override
     public void run() {
         transferComplete = false;
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            System.out.println("Interrupt connection");
-            try {
-                in.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-        }
         while (!transferComplete) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                System.out.println("Interrupt connection");
+                try {
+                    in.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                break;
+            }
 
             try {
                 int value = in.read();

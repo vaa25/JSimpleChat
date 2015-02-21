@@ -1,6 +1,7 @@
 package jpractice.chat;
 
 /**
+ * Клиент
  * @author Alexander Vlasov
  */
 
@@ -21,7 +22,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import jpractice.chat.networks.MyObjectInputStream;
-import jpractice.chat.networks.Network;
+import jpractice.chat.networks.NetworkClient;
 import jpractice.chat.networks.ObjectHandler;
 import jpractice.chat.networks.Special;
 
@@ -39,12 +40,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Controller implements Initializable {
     public static String name;
-    final int serverPort = 20000;
+    final int serverPort = 10181;
     private List<Person> personList;
     private Person me;
     private ObjectHandler objectHandler;
     private Socket socket;
-    private Network network;
+    private NetworkClient network;
     private ConcurrentHashMap<MyObjectInputStream, BlockingQueue> received;
     @FXML
     private TextArea commonArea;
@@ -95,7 +96,7 @@ public class Controller implements Initializable {
             editText.requestFocus();
             editText.selectEnd();
         });
-        if (me.getVisual().equals(visual)) {
+        if (me.getVisual().toString().equals(visual.toString())) {
             visual.setFill(Color.RED);
         }
         personVBox.getChildren().addAll(person.getVisual());
@@ -156,7 +157,7 @@ public class Controller implements Initializable {
             received = new ConcurrentHashMap<>();
             socket = new Socket(InetAddress.getLocalHost(), serverPort);
             commonArea.appendText("Соединение с сервером установлено\n");
-            network = new Network(socket, received);
+            network = new NetworkClient(socket, received);
             setObjectHandler(received);
             personList = new ArrayList<>();
             network.send(me);

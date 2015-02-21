@@ -40,6 +40,7 @@ public class Serializator {
     public static final byte BIGDECIMAL = 1;
     public static final byte ARRAY = 11;
     public static final byte COLLECTION = 12;
+    public static final byte ENUM = 13;
 
 
     private static Map<Class, Byte> codes = new HashMap<>();
@@ -70,6 +71,7 @@ public class Serializator {
         codes.put(HashSet.class, COLLECTION);
         codes.put(SortedSet.class, COLLECTION);
         codes.put(TreeSet.class, COLLECTION);
+        codes.put(Enum.class, ENUM);
 
         lengths.put(BOOLEAN, 2);
         lengths.put(INTEGER, 5);
@@ -107,6 +109,8 @@ public class Serializator {
                 return new ArraySerializator();
             case COLLECTION:
                 return new CollectionSerializator();
+            case ENUM:
+                return new EnumSerializator();
             default:
                 return new ObjectSerializator();
         }
@@ -117,6 +121,8 @@ public class Serializator {
         byte code;
         if (clazz.isArray()) {
             code = ARRAY;
+        } else if (clazz.isEnum()) {
+            code = ENUM;
         } else {
             code = getCode(clazz);
         }
@@ -134,7 +140,7 @@ public class Serializator {
     }
 
     public static boolean containsCode(Class clazz) {
-        if (clazz.isArray()) {
+        if (clazz.isArray() || clazz.isEnum()) {
             return true;
         } else {
             return codes.containsKey(clazz);
