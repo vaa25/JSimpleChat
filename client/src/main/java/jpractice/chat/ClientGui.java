@@ -9,7 +9,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import jpractice.chat.websocket.WSController;
 
 import java.io.IOException;
 
@@ -29,6 +28,7 @@ public class ClientGui extends Application {
         authorizationGui.setTitle("Authorization");
         authorizationGui.setScene(authorizationScene);
         AuthorizationController.stage = authorizationGui;
+        authorizationGui.setOnCloseRequest((event -> System.exit(0)));
         authorizationGui.showAndWait();
         WSController.name = ((TextField) (authorizationScene.lookup("TextField"))).getText();
         clientGui.setTitle("Клиент чата");

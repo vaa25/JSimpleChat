@@ -1,4 +1,4 @@
-package jpractice.chat.websocket;
+package jpractice.chat;
 
 /**
  * Клиент
@@ -21,6 +21,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import jpractice.chat.websocket.*;
 import org.eclipse.jetty.websocket.api.WebSocketException;
 
 import java.net.ConnectException;
