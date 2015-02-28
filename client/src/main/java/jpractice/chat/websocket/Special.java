@@ -1,4 +1,4 @@
-package jpractice.chat.networks;
+package jpractice.chat.websocket;
 
 /**
  * Класс для использования в качестве специального сигнала или команды при сетевом сообщении

@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="jetty-websocket-8.1.16.v20140903">
+    <CLASSES>
+      <root url="jar://D:/javaEE/jetty-distribution-8.1.16.v20140903/lib/jetty-websocket-8.1.16.v20140903.jar!/" />
+      <root url="jar://D:/javaEE/jetty-distribution-8.1.16.v20140903/lib/jetty-util-8.1.16.v20140903.jar!/" />
+      <root url="jar://D:/javaEE/jetty-distribution-8.1.16.v20140903/lib/jetty-io-8.1.16.v20140903.jar!/" />
+      <root url="jar://D:/javaEE/jetty-distribution-8.1.16.v20140903/lib/jetty-http-8.1.16.v20140903.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="http://download.eclipse.org/jetty/stable-8/apidocs/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>

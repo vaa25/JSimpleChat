@@ -1,0 +1,21 @@
+<component name="ArtifactManager">
+  <artifact type="javafx" name="JSimpleChatClient">
+    <output-path>$PROJECT_DIR$/out/artifacts/JSimpleChatClient</output-path>
+    <properties id="javafx-properties">
+      <options>
+        <option name="appClass" value="jpractice.chat.ClientGui" />
+        <option name="description" value="Uses Jetty 9.2.9 WebSockets&#13;&#10;vaa25@yandex.ru" />
+        <option name="htmlParamFile" value="" />
+        <option name="paramFile" value="" />
+        <option name="title" value="Java Simple Chat" />
+        <option name="vendor" value="Alexander Vlasov" />
+      </options>
+    </properties>
+    <root id="root">
+      <element id="archive" name="JSimpleChatClient.jar">
+        <element id="module-output" name="JSimpleChatClient" />
+      </element>
+      <element id="library" level="project" name="javax-websocket" />
+    </root>
+  </artifact>
+</component>

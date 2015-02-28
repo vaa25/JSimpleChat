@@ -1,7 +1,4 @@
-package jpractice.chat;
-
-import javafx.scene.Node;
-import javafx.scene.text.Text;
+package jpractice.chat.websocket;
 
 /**
  * @author Alexander Vlasov
@@ -9,7 +6,7 @@ import javafx.scene.text.Text;
 public class Person {
     private String name;
     private boolean online;
-    private transient Text image;
+    private String id;
 
     public Person() {
         this("Alex");
@@ -18,7 +15,15 @@ public class Person {
     public Person(String name) {
         this.name = name;
         online = true;
-//        image=new Text(name);
+
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public boolean isOnline() {
@@ -37,21 +42,12 @@ public class Person {
         this.name = name;
     }
 
-    public Node getVisual() {
-        if (image == null) {
-            image = new Text(name);
-        }
-        return image;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Person person = (Person) o;
-
-        if (!name.equals(person.name)) return false;
+        if (!id.equals(((Person) o).id)) return false;
 
         return true;
     }

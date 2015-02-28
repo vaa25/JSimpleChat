@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.eclipse.jetty:jetty-webapp:9.2.9.v20150225">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/eclipse/jetty/jetty-webapp/9.2.9.v20150225/jetty-webapp-9.2.9.v20150225.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/eclipse/jetty/jetty-webapp/9.2.9.v20150225/jetty-webapp-9.2.9.v20150225-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/eclipse/jetty/jetty-webapp/9.2.9.v20150225/jetty-webapp-9.2.9.v20150225-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

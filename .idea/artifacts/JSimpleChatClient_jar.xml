@@ -1,0 +1,15 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="JSimpleChatClient:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/JSimpleChatClient_jar</output-path>
+    <root id="archive" name="JSimpleChatClient.jar">
+      <element id="module-output" name="JSimpleChatClient" />
+      <element id="extracted-dir" path="D:/javaEE/jetty-distribution-9.2.9.v20150224/lib/websocket/javax-websocket-client-impl-9.2.9.v20150224.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/javaEE/jetty-distribution-9.2.9.v20150224/lib/websocket/websocket-api-9.2.9.v20150224.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/javaEE/jetty-distribution-9.2.9.v20150224/lib/websocket/websocket-client-9.2.9.v20150224.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/javaEE/jetty-distribution-9.2.9.v20150224/lib/jetty-util-9.2.9.v20150224.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/javaEE/jetty-distribution-9.2.9.v20150224/lib/jetty-io-9.2.9.v20150224.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="D:/javaEE/jetty-distribution-9.2.9.v20150224/lib/websocket/websocket-common-9.2.9.v20150224.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/code/gson/gson/2.3.1/gson-2.3.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

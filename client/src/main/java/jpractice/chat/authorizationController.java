@@ -28,7 +28,11 @@ public class AuthorizationController {
 
     @FXML
     void nameEntered(ActionEvent event) {
-        stage.close();
+        if (textField.getText().trim().length() == 0) {
+            textField.clear();
+        } else {
+            stage.close();
+        }
     }
 
 

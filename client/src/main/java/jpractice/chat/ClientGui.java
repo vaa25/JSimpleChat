@@ -5,11 +5,11 @@ package jpractice.chat;/**
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import jpractice.chat.websocket.WSController;
 
 import java.io.IOException;
 
@@ -21,23 +21,18 @@ public class ClientGui extends Application {
 
     @Override
     public void start(Stage clientGui) throws IOException {
-
-
-        Parent authorizationParent = FXMLLoader.load(ClassLoader.getSystemClassLoader().getResource("authorization.fxml"));
         Stage authorizationGui = new Stage();
         authorizationGui.initModality(Modality.WINDOW_MODAL);
         authorizationGui.initOwner(clientGui);
-        Scene authorizationScene = new Scene(authorizationParent);
+        Scene authorizationScene = new Scene(
+                FXMLLoader.load(ClassLoader.getSystemClassLoader().getResource("authorization.fxml")));
         authorizationGui.setTitle("Authorization");
         authorizationGui.setScene(authorizationScene);
         AuthorizationController.stage = authorizationGui;
-
         authorizationGui.showAndWait();
-        Controller.name = ((TextField) (authorizationScene.lookup("TextField"))).getText();
-        Parent root = FXMLLoader.load(ClassLoader.getSystemClassLoader().getResource("server.fxml"));
-        Scene scene = new Scene(root);
+        WSController.name = ((TextField) (authorizationScene.lookup("TextField"))).getText();
         clientGui.setTitle("Клиент чата");
-        clientGui.setScene(scene);
+        clientGui.setScene(new Scene(FXMLLoader.load(ClassLoader.getSystemClassLoader().getResource("client.fxml"))));
         clientGui.setOnCloseRequest(event -> System.exit(0));
         clientGui.show();
     }
