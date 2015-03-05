@@ -30,7 +30,7 @@ public class ClientGui extends Application {
         AuthorizationController.stage = authorizationGui;
         authorizationGui.setOnCloseRequest((event -> System.exit(0)));
         authorizationGui.showAndWait();
-        WSController.name = ((TextField) (authorizationScene.lookup("TextField"))).getText();
+        ClientController.name = ((TextField) (authorizationScene.lookup("TextField"))).getText();
         clientGui.setTitle("Клиент чата");
         clientGui.setScene(new Scene(FXMLLoader.load(ClassLoader.getSystemClassLoader().getResource("client.fxml"))));
         clientGui.setOnCloseRequest(event -> System.exit(0));

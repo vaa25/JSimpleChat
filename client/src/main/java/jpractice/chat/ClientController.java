@@ -32,7 +32,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class WSController implements Initializable {
+public class ClientController implements Initializable {
     public static String name;
     private BlockingQueue<String> inbox;
     private SimpleClient network;
